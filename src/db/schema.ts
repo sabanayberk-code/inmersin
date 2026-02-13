@@ -4,7 +4,8 @@ import { relations, sql } from "drizzle-orm";
 // Enums (handled as text in SQLite)
 export const ROLES = ["admin", "agent"] as const;
 export const STATUSES = ["draft", "published", "sold", "archived"] as const;
-export const LANGUAGES = ["en", "ru", "ar", "zh"] as const;
+export const LANGUAGES = ["en", "ru", "tr", "ar", "zh"] as const;
+export const TYPES = ["real_estate", "vehicle", "part"] as const;
 
 export const users = sqliteTable("users", {
     id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
@@ -15,27 +16,37 @@ export const users = sqliteTable("users", {
     role: text("role").$type<typeof ROLES[number]>().default("agent"),
     languages: text("languages", { mode: "json" }).$type<string[]>(), // Store array as JSON
     createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(unixepoch())`),
+    emailVerified: integer("email_verified", { mode: "boolean" }).default(false),
+    isApproved: integer("is_approved", { mode: "boolean" }).default(false), // Admin approval
+    verificationToken: text("verification_token"),
+    resetToken: text("reset_token"),
+    resetTokenExpiresAt: integer("reset_token_expires_at", { mode: "timestamp" }),
 });
 
-export const properties = sqliteTable("properties", {
+export const sessions = sqliteTable("sessions", {
+    id: text("id").primaryKey(),
+    userId: integer("user_id").notNull().references(() => users.id),
+    expiresAt: integer("expires_at", { mode: "timestamp" }).notNull()
+});
+
+export const listings = sqliteTable("listings", {
     id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
     agentId: integer("agent_id").references(() => users.id).notNull(),
-    price: integer("price").notNull(), // Store as cents or main unit? Let's use integer for simplicity or text for exact decimal
-    // Better practice in SQLite for currency: Store as integer (cents) or REAL (but REAL has float issues).
-    // Let's store as TEXT to be safe with large numbers/decimals or just number if we don't care about float precision yet.
-    // The PG schema had decimal. Let's use REAL for now for simplicity in dev, or text.
-    // Actually, let's use integer for "price in valid currency" or just Real.
+    type: text("type").$type<typeof TYPES[number]>().default("real_estate").notNull(), // real_estate, vehicle, part
+    price: integer("price").notNull(), // Store as integer (val * 1) or just number
     currency: text("currency").default("USD"),
     location: text("location", { mode: "json" }).notNull(), // { lat, lng, address, city, country }
-    features: text("features", { mode: "json" }).notNull(), // { bedrooms, bathrooms, area, pool: boolean, etc. }
+    features: text("features", { mode: "json" }).notNull(), // Polymorphic JSON: { bedrooms... } OR { km, year... }
     status: text("status").$type<typeof STATUSES[number]>().default("draft"),
-    createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(unixepoch())`),
-    updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(unixepoch())`),
+    isShowcase: integer("is_showcase", { mode: "boolean" }).default(false), // Showcase on homepage
+    viewCount: integer("view_count").default(0),
+    createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(cast(unixepoch() * 1000 as integer))`),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(cast(unixepoch() * 1000 as integer))`),
 });
 
-export const propertyTranslations = sqliteTable("property_translations", {
+export const listingTranslations = sqliteTable("listing_translations", {
     id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
-    propertyId: integer("property_id").references(() => properties.id, { onDelete: 'cascade' }).notNull(),
+    listingId: integer("listing_id").references(() => listings.id, { onDelete: 'cascade' }).notNull(),
     language: text("language").$type<typeof LANGUAGES[number]>().notNull(),
     title: text("title").notNull(),
     description: text("description").notNull(),
@@ -44,7 +55,7 @@ export const propertyTranslations = sqliteTable("property_translations", {
 
 export const media = sqliteTable("media", {
     id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
-    propertyId: integer("property_id").references(() => properties.id, { onDelete: 'cascade' }).notNull(),
+    listingId: integer("listing_id").references(() => listings.id, { onDelete: 'cascade' }).notNull(),
     url: text("url").notNull(),
     type: text("type").default("image"),
     order: integer("order").default(0),
@@ -52,28 +63,28 @@ export const media = sqliteTable("media", {
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
-    properties: many(properties),
+    listings: many(listings),
 }));
 
-export const propertiesRelations = relations(properties, ({ one, many }) => ({
+export const listingsRelations = relations(listings, ({ one, many }) => ({
     agent: one(users, {
-        fields: [properties.agentId],
+        fields: [listings.agentId],
         references: [users.id],
     }),
-    translations: many(propertyTranslations),
+    translations: many(listingTranslations),
     media: many(media),
 }));
 
-export const propertyTranslationsRelations = relations(propertyTranslations, ({ one }) => ({
-    property: one(properties, {
-        fields: [propertyTranslations.propertyId],
-        references: [properties.id],
+export const listingTranslationsRelations = relations(listingTranslations, ({ one }) => ({
+    listing: one(listings, {
+        fields: [listingTranslations.listingId],
+        references: [listings.id],
     }),
 }));
 
 export const mediaRelations = relations(media, ({ one }) => ({
-    property: one(properties, {
-        fields: [media.propertyId],
-        references: [properties.id],
+    listing: one(listings, {
+        fields: [media.listingId],
+        references: [listings.id],
     }),
 }));

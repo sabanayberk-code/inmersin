@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const translationInputSchema = z.object({
     text: z.string().min(1),
-    targetLanguage: z.enum(["en", "ru", "ar", "zh"]),
+    targetLanguage: z.enum(["en", "ru", "ar", "zh", "tr"]),
 });
 
 export type TranslationInput = z.infer<typeof translationInputSchema>;
@@ -25,7 +25,7 @@ export async function translateText(input: TranslationInput): Promise<Translatio
     await new Promise(resolve => setTimeout(resolve, 100));
 
     return {
-        translatedText: `[${validated.targetLanguage.toUpperCase()}] ${validated.text}`,
+        translatedText: validated.text, // Return text as-is without prefix for now
         originalText: validated.text,
         language: validated.targetLanguage
     };

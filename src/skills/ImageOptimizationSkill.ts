@@ -1,11 +1,11 @@
 import { z } from "zod";
 
 export const imageOptInputSchema = z.object({
-    imageUrl: z.string().url(),
+    imageUrl: z.string(),
     targetFormat: z.enum(["webp", "avif"]).default("webp"),
 });
 
-export type ImageOptInput = z.infer<typeof imageOptInputSchema>;
+export type ImageOptInput = z.input<typeof imageOptInputSchema>;
 
 export const imageOptOutputSchema = z.object({
     originalUrl: z.string(),
