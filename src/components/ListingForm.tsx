@@ -93,15 +93,21 @@ export default function ListingForm({ initialData, isEditMode = false }: Listing
     // Check 'type' first, then fallback to categories to handle both new and old DB structures
     const checkCat = initialData?.features?.category || initialData?.subCategory || initialData?.category;
 
+    // Robust fallback for older listings that didn't save category properly
+    const isVehicleFallback = initialData?.features?.year !== undefined || initialData?.features?.km !== undefined || initialData?.features?.gear !== undefined || initialData?.features?.fuel !== undefined;
+    const isPartFallback = initialData?.features?.condition !== undefined || initialData?.features?.oemNo !== undefined || initialData?.features?.compatibility !== undefined;
+
     const isVehicle = initialData?.type === 'vehicle' ||
         initialData?.mainCategory === 'Vasıta' ||
         initialData?.category === 'Vasıta' ||
-        (checkCat && CATEGORY_DATA['Vasıta']?.subcategories?.[checkCat]);
+        (checkCat && CATEGORY_DATA['Vasıta']?.subcategories?.[checkCat]) ||
+        isVehicleFallback;
 
     const isPart = initialData?.type === 'part' ||
         initialData?.mainCategory === 'Yedek Parça' ||
         initialData?.category === 'Yedek Parça' ||
-        (checkCat && CATEGORY_DATA['Yedek Parça']?.subcategories?.[checkCat]);
+        (checkCat && CATEGORY_DATA['Yedek Parça']?.subcategories?.[checkCat]) ||
+        isPartFallback;
 
     let discriminatorType = 'real_estate';
     if (isVehicle) discriminatorType = 'vehicle';
@@ -329,6 +335,13 @@ export default function ListingForm({ initialData, isEditMode = false }: Listing
                 location: {
                     ...data.location,
                     country: "Turkey"
+                },
+                features: {
+                    ...data.features,
+                    category: data.features?.category || initialData?.category,
+                    propertyType: data.features?.propertyType || initialData?.propertyType,
+                    type: data.features?.type || initialData?.features?.type,
+                    listingType: data.features?.listingType || initialData?.features?.listingType
                 },
                 images,
                 id: isEditMode ? initialData.id : undefined, // Pass ID if editing

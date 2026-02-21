@@ -35,9 +35,9 @@ export class ListingAgent {
         );
 
         // 5. Database Transaction
-        return db.transaction((tx) => {
+        return await db.transaction(async (tx) => {
             // Insert Listing
-            const info = tx.insert(listings).values({
+            const info = await tx.insert(listings).values({
                 agentId: validated.agentId,
                 type: validated.type,
                 price: validated.price,
@@ -68,25 +68,25 @@ export class ListingAgent {
                 enDesc = enTranslation.description;
             }
 
-            tx.insert(listingTranslations).values({
+            await tx.insert(listingTranslations).values({
                 listingId: newId,
                 language: "en",
                 title: enTitle,
                 description: enDesc,
                 slug: this.generateSlug(enTitle)
-            }).run();
+            });
 
             // 2. Insert other generated translations
             for (const t of translations) {
                 if (t.lang === 'en') continue; // Already inserted above
 
-                tx.insert(listingTranslations).values({
+                await tx.insert(listingTranslations).values({
                     listingId: newId,
                     language: t.lang,
                     title: t.title,
                     description: t.description,
                     slug: this.generateSlug(t.title)
-                }).run();
+                });
             }
 
             // 3. Generate Serial Code
@@ -97,19 +97,18 @@ export class ListingAgent {
 
             const serialCode = `${prefix}-${10000 + newId}`;
 
-            tx.update(listings)
+            await tx.update(listings)
                 .set({ serialCode })
-                .where(eq(listings.id, newId))
-                .run();
+                .where(eq(listings.id, newId));
 
             // Insert Media
             for (const [index, img] of optimizedImages.entries()) {
-                tx.insert(media).values({
+                await tx.insert(media).values({
                     listingId: newId,
                     url: img, // Use the URL string directly
                     type: "image",
                     order: index
-                }).run();
+                });
             }
 
             return { id: newId, serialCode };
