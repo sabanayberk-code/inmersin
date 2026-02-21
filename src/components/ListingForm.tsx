@@ -90,9 +90,18 @@ export default function ListingForm({ initialData, isEditMode = false }: Listing
     const [currency, setCurrency] = useState<"USD" | "EUR" | "TRY">("USD");
 
     // Determine Listing Type based on initialData
-    // Check new mainCategory first, fallback to old logic
-    const isVehicle = initialData?.mainCategory === 'Vasıta' || initialData?.category === 'Vasıta';
-    const isPart = initialData?.mainCategory === 'Yedek Parça' || initialData?.category === 'Yedek Parça';
+    // Check 'type' first, then fallback to categories to handle both new and old DB structures
+    const checkCat = initialData?.features?.category || initialData?.subCategory || initialData?.category;
+
+    const isVehicle = initialData?.type === 'vehicle' ||
+        initialData?.mainCategory === 'Vasıta' ||
+        initialData?.category === 'Vasıta' ||
+        (checkCat && CATEGORY_DATA['Vasıta']?.subcategories?.[checkCat]);
+
+    const isPart = initialData?.type === 'part' ||
+        initialData?.mainCategory === 'Yedek Parça' ||
+        initialData?.category === 'Yedek Parça' ||
+        (checkCat && CATEGORY_DATA['Yedek Parça']?.subcategories?.[checkCat]);
 
     let discriminatorType = 'real_estate';
     if (isVehicle) discriminatorType = 'vehicle';

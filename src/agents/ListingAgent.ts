@@ -203,9 +203,9 @@ export class ListingAgent {
         const optimizedImages = validated.images;
 
         // 3. Database Transaction
-        return db.transaction((tx) => {
+        return await db.transaction(async (tx) => {
             // Update Main Listing
-            tx.update(listings)
+            await tx.update(listings)
                 .set({
                     price: validated.price,
                     currency: validated.currency,
@@ -214,51 +214,48 @@ export class ListingAgent {
                     isShowcase: validated.isShowcase,
                     updatedAt: new Date()
                 })
-                .where(sql`${listings.id} = ${id}`)
-                .run();
+                .where(sql`${listings.id} = ${id}`);
 
             // Update Translations (Locale Aware)
             // Ensure locale is valid, fallback to 'en'
             const validLocale = LANGUAGES.includes(locale as any) ? (locale as typeof LANGUAGES[number]) : 'en';
             const targetLocale = validLocale;
 
-            const existingTrans = tx.select().from(listingTranslations)
+            const existingTrans = await tx.select().from(listingTranslations)
                 .where(and(eq(listingTranslations.listingId, id), eq(listingTranslations.language, targetLocale)))
                 .get();
 
             if (existingTrans) {
-                tx.update(listingTranslations)
+                await tx.update(listingTranslations)
                     .set({
                         title: cleanTitle,
                         description: cleanDescription,
                         slug: this.generateSlug(cleanTitle)
                     })
-                    .where(eq(listingTranslations.id, existingTrans.id))
-                    .run();
+                    .where(eq(listingTranslations.id, existingTrans.id));
             } else {
-                tx.insert(listingTranslations).values({
+                await tx.insert(listingTranslations).values({
                     listingId: id,
                     language: targetLocale,
                     title: cleanTitle,
                     description: cleanDescription,
                     slug: this.generateSlug(cleanTitle)
-                }).run();
+                });
             }
 
             // Update Images:
             // Strategy: Delete all existing images and re-insert.
-            tx.delete(media)
-                .where(and(eq(media.listingId, id), eq(media.type, 'image')))
-                .run();
+            await tx.delete(media)
+                .where(and(eq(media.listingId, id), eq(media.type, 'image')));
 
             // Insert Media
             for (const [index, img] of optimizedImages.entries()) {
-                tx.insert(media).values({
+                await tx.insert(media).values({
                     listingId: id,
                     url: img, // Use the URL string directly
                     type: "image",
                     order: index
-                }).run();
+                });
             }
         });
     }
