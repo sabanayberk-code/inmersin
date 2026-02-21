@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export default function MobileFilterWrapper({ children }: { children: React.ReactNode }) {
     const [isOpen, setIsOpen] = useState(false);
+    const t = useTranslations('Filters');
 
     return (
         <>
@@ -15,7 +17,7 @@ export default function MobileFilterWrapper({ children }: { children: React.Reac
                     className="p-2 border rounded-md bg-white dark:bg-gray-800 shadow-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
                 >
                     <Menu className="w-5 h-5" />
-                    <span className="text-sm font-medium">Filtreler</span>
+                    <span className="text-sm font-medium">{t('title_listings') || "Filtreler"}</span>
                 </button>
             </div>
 

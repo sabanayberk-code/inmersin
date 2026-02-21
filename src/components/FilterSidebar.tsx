@@ -786,11 +786,11 @@ export default function FilterSidebar({ counts }: FilterSidebarProps) {
                     <>
                         <hr className="border-gray-100 dark:border-gray-700" />
                         <div className="space-y-2">
-                            <h4 className="font-bold text-gray-700 dark:text-gray-300 px-1">Year / Yıl</h4>
+                            <h4 className="font-bold text-gray-700 dark:text-gray-300 px-1">{t('sec_year', { defaultValue: 'Yıl' })}</h4>
                             <div className="flex gap-1 items-center">
                                 <input
                                     type="number"
-                                    placeholder="Min"
+                                    placeholder={t('ph_min')}
                                     className="w-full h-7 px-2 border rounded text-xs outline-none focus:border-blue-500 bg-white dark:bg-gray-700"
                                     value={minYear}
                                     onChange={(e) => setMinYear(e.target.value)}
@@ -798,7 +798,7 @@ export default function FilterSidebar({ counts }: FilterSidebarProps) {
                                 <span className="text-gray-400">-</span>
                                 <input
                                     type="number"
-                                    placeholder="Max"
+                                    placeholder={t('ph_max')}
                                     className="w-full h-7 px-2 border rounded text-xs outline-none focus:border-blue-500 bg-white dark:bg-gray-700"
                                     value={maxYear}
                                     onChange={(e) => setMaxYear(e.target.value)}
@@ -810,7 +810,7 @@ export default function FilterSidebar({ counts }: FilterSidebarProps) {
                             <div className="flex gap-1 items-center">
                                 <input
                                     type="number"
-                                    placeholder="Min"
+                                    placeholder={t('ph_min')}
                                     className="w-full h-7 px-2 border rounded text-xs outline-none focus:border-blue-500 bg-white dark:bg-gray-700"
                                     value={minKm}
                                     onChange={(e) => setMinKm(e.target.value)}
@@ -818,7 +818,7 @@ export default function FilterSidebar({ counts }: FilterSidebarProps) {
                                 <span className="text-gray-400">-</span>
                                 <input
                                     type="number"
-                                    placeholder="Max"
+                                    placeholder={t('ph_max')}
                                     className="w-full h-7 px-2 border rounded text-xs outline-none focus:border-blue-500 bg-white dark:bg-gray-700"
                                     value={maxKm}
                                     onChange={(e) => setMaxKm(e.target.value)}
@@ -848,15 +848,15 @@ export default function FilterSidebar({ counts }: FilterSidebarProps) {
                         </CollapsibleSection>
                     ))}
                 </div>
-            </div >
+            </div>
 
             {/* Sticky Footer */}
-            < div className="absolute bottom-0 w-full p-2 border-t bg-white dark:bg-gray-800 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]" >
+            <div className="absolute bottom-0 w-full p-2 border-t bg-white dark:bg-gray-800 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
                 <Button onClick={handleSearch} className="w-full h-9 bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md">
                     {t('btn_search')}
                 </Button>
-            </div >
-        </aside >
+            </div>
+        </aside>
     );
 }
 

@@ -34,13 +34,13 @@ export default function ListingCard({
 
     return (
         <Link href={`/properties/${id}`} className="block group">
-            <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full flex flex-col">
-                <div className="relative h-48 w-full overflow-hidden">
+            <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full flex flex-col rounded-xl border border-gray-200 dark:border-gray-800">
+                <div className="relative h-48 w-full overflow-hidden rounded-t-xl group">
                     <Image
                         src={imageUrl}
                         alt={title}
                         fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                     <Badge className="absolute top-2 right-2 bg-black/70 hover:bg-black/80">
                         {formattedPrice}
