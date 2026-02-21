@@ -18,6 +18,7 @@ export default async function PropertiesPage({ params }: { params: Promise<{ loc
                     <ListingCard
                         key={property.id}
                         {...property}
+                        serialCode={property.serialCode ?? undefined} // Null gelirse Undefined'a zorla
                         locale={locale}
                     />
                 ))}

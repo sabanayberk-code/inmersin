@@ -32,7 +32,7 @@ export const realEstateFeaturesSchema = z.object({
     floorNumber: z.number().int(),
     totalFloors: z.number().int().min(1, "err_required"),
     heating: z.string().min(1, "err_required"),
-    kitchen: z.enum(["Open", "Closed"]),
+    kitchen: z.string().optional(),
     balcony: z.boolean().default(false),
     elevator: z.boolean().default(false),
     parking: z.string().optional(),
@@ -89,7 +89,7 @@ const baseListingInput = z.object({
     location: locationSchema,
     title: z.string().min(10, "err_min_10"),
     description: z.string().min(20, "err_min_20"),
-    images: z.array(z.string()).optional().default([]),
+    images: z.array(z.string()).min(1, "err_min_image"),
     isShowcase: z.boolean().default(false),
 });
 

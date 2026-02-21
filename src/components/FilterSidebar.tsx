@@ -39,9 +39,16 @@ export default function FilterSidebar({ counts }: FilterSidebarProps) {
         { id: 'warranty', title: t('sec_warranty'), options: ['Evet', 'Hayır'] },
     ];
 
-    const PART_FILTERS = [
-        { id: 'condition', title: t('sec_condition'), options: ['New', 'Used'] },
+    const PART_FILTERS: { id: string, title: string, options: string[] }[] = [
+        // { id: 'condition', title: t('sec_condition'), options: ['New', 'Used'] },
     ];
+
+    // Dynamic Part Subcategories
+    const partSubcategories = Object.keys(CATEGORY_DATA['Yedek Parça']?.subcategories || {}).map(sub => ({
+        name: sub,
+        value: sub, // Value is the category name itself for parts
+        count: counts?.part.subcategories[sub] || 0
+    }));
 
     const categoriesData = [
         {
@@ -80,8 +87,8 @@ export default function FilterSidebar({ counts }: FilterSidebarProps) {
             type: 'vehicle',
             queryCategory: 'Otomobil',
             subcategories: [
-                { name: t('cat_sale'), value: 'Sale', count: counts?.vasita?.automobile.total || 0 }, // Simplified for now, brands are what matter
-                { name: t('cat_rent'), value: 'Rent', count: 0 }
+                { name: t('cat_sale'), value: 'Sale', count: counts?.vasita?.automobile.sale || 0 },
+                { name: t('cat_rent'), value: 'Rent', count: counts?.vasita?.automobile.rent || 0 }
             ]
         },
         {
@@ -90,56 +97,70 @@ export default function FilterSidebar({ counts }: FilterSidebarProps) {
             type: 'vehicle',
             queryCategory: 'Arazi, SUV & Pickup',
             subcategories: [
-                { name: t('cat_sale'), value: 'Sale', count: 0 },
-                { name: t('cat_rent'), value: 'Rent', count: 0 }
+                { name: t('cat_sale'), value: 'Sale', count: counts?.vasita?.suv.sale || 0 },
+                { name: t('cat_rent'), value: 'Rent', count: counts?.vasita?.suv.rent || 0 }
+            ]
+        },
+        {
+            name: t('cat_motorcycle'),
+            count: counts?.vasita?.motorcycle.total || 0,
+            type: 'vehicle',
+            queryCategory: 'Motosiklet',
+            subcategories: [
+                { name: t('cat_sale'), value: 'Sale', count: counts?.vasita?.motorcycle.sale || 0 },
+                { name: t('cat_rent'), value: 'Rent', count: counts?.vasita?.motorcycle.rent || 0 }
             ]
         },
         {
             name: t('cat_electric'),
-            count: counts?.vasita?.electric || 0,
+            count: counts?.vasita?.electric.total || 0,
             type: 'vehicle',
             queryCategory: 'Elektrikli Araçlar',
             subcategories: [
-                { name: t('cat_sale'), value: 'Sale', count: 0 },
-                { name: t('cat_rent'), value: 'Rent', count: 0 }
+                { name: t('cat_sale'), value: 'Sale', count: counts?.vasita?.electric.sale || 0 },
+                { name: t('cat_rent'), value: 'Rent', count: counts?.vasita?.electric.rent || 0 }
             ]
         },
         {
             name: t('cat_minivan'),
-            count: counts?.vasita?.minivan || 0,
+            count: counts?.vasita?.minivan.total || 0,
             type: 'vehicle',
             queryCategory: 'Minivan & Panelvan',
             subcategories: [
-                { name: t('cat_sale'), value: 'Sale', count: 0 },
-                { name: t('cat_rent'), value: 'Rent', count: 0 }
+                { name: t('cat_sale'), value: 'Sale', count: counts?.vasita?.minivan.sale || 0 },
+                { name: t('cat_rent'), value: 'Rent', count: counts?.vasita?.minivan.rent || 0 }
             ]
         },
         {
             name: t('cat_commercial_vehicle'),
-            count: counts?.vasita?.commercial || 0,
+            count: counts?.vasita?.commercial.total || 0,
             type: 'vehicle',
             queryCategory: 'Ticari Araçlar',
             subcategories: [
-                { name: t('cat_sale'), value: 'Sale', count: 0 },
-                { name: t('cat_rent'), value: 'Rent', count: 0 }
+                { name: t('cat_sale'), value: 'Sale', count: counts?.vasita?.commercial.sale || 0 },
+                { name: t('cat_rent'), value: 'Rent', count: counts?.vasita?.commercial.rent || 0 }
             ]
         },
         {
             name: t('cat_damaged'),
-            count: counts?.vasita?.damaged || 0,
+            count: counts?.vasita?.damaged.total || 0,
             type: 'vehicle',
             queryCategory: 'Hasarlı Araçlar',
             subcategories: [
-                { name: t('cat_sale'), value: 'Sale', count: 0 },
+                { name: t('cat_sale'), value: 'Sale', count: counts?.vasita?.damaged.sale || 0 },
+                { name: t('cat_rent'), value: 'Rent', count: counts?.vasita?.damaged.rent || 0 }
             ]
         },
         {
             name: t('cat_part'),
             count: counts?.part?.total || 0,
             type: 'part',
-            subcategories: [
-                { name: t('cat_sale'), value: 'Sale', count: counts?.part?.sale || 0 },
-            ]
+            queryCategory: 'Yedek Parça',
+            subcategories: partSubcategories.map(s => ({
+                name: s.name,
+                value: s.value,
+                count: s.count
+            }))
         }
     ];
 
@@ -243,37 +264,34 @@ export default function FilterSidebar({ counts }: FilterSidebarProps) {
     const currentPropertyType = searchParams.get('propertyType');
 
     const handleCategoryClick = (type: string, listingType: string, category?: string, propertyType?: string) => {
-        const params = new URLSearchParams();
-        if (city !== t('lbl_city')) params.set('city', city);
-        params.set('currency', currency);
+        const params = new URLSearchParams(searchParams.toString());
+
+        // Always ensure type is set properly
         params.set('type', type);
 
-        // Preserve view
-        const currentView = searchParams.get('view');
-        if (currentView) params.set('view', currentView);
-
         // Toggle Logic for Category (Level 1)
-        // If clicking the same category that is open, and NOT clicking a sub-item (listingType/propertyType is empty/undefined in this click)
         if (category && category === currentCategory && !listingType && !propertyType) {
-            // Deselect category (Go back to just Type)
-            // Do not set 'category' param
-            router.push(`${pathname}?${params.toString()}`);
+            params.delete('category');
+            params.delete('listingType');
+            params.delete('propertyType');
+            router.push(`${pathname}?${params.toString()}`, { scroll: false });
             return;
         }
 
         // Toggle Logic for Listing Type (Level 2 - Sale/Rent)
         if (listingType && listingType === currentListingType && !propertyType) {
-            // Keep category, but remove listingType
+            params.delete('listingType');
+            params.delete('propertyType');
             if (category) params.set('category', category);
-            router.push(`${pathname}?${params.toString()}`);
+            router.push(`${pathname}?${params.toString()}`, { scroll: false });
             return;
         }
 
-        if (listingType) params.set('listingType', listingType);
-        if (category) params.set('category', category);
-        if (propertyType) params.set('propertyType', propertyType);
+        if (category) params.set('category', category); else params.delete('category');
+        if (listingType) params.set('listingType', listingType); else params.delete('listingType');
+        if (propertyType) params.set('propertyType', propertyType); else params.delete('propertyType');
 
-        router.push(`${pathname}?${params.toString()}`);
+        router.push(`${pathname}?${params.toString()}`, { scroll: false });
     };
 
     // Scroll to active category on mount/update
@@ -386,20 +404,20 @@ export default function FilterSidebar({ counts }: FilterSidebarProps) {
 
     const getCount = (type: string, queryCategory: string, pType: string, listingType?: string) => {
         if (!counts) return 0;
-        if (type === 'real_estate') {
-            if (queryCategory === 'Konut') return counts.konut.types[pType] || 0;
-            if (queryCategory === 'İş Yeri') return counts.workplace.types[pType] || 0;
-            if (queryCategory === 'Arsa') return counts.land.types[pType] || 0;
-        } else if (type === 'vehicle') {
-            // Helper to extract count
-            const getBrandCount = (brands: any, brand: string) => {
-                const bData = brands[brand];
-                if (!bData) return 0;
-                if (listingType === 'Sale') return bData.sale;
-                if (listingType === 'Rent') return bData.rent;
-                return bData.total;
-            };
 
+        const getBrandCount = (brands: any, brand: string) => {
+            const bData = brands[brand];
+            if (!bData) return 0;
+            if (listingType === 'Sale') return bData.sale;
+            if (listingType === 'Rent') return bData.rent;
+            return bData.total;
+        };
+
+        if (type === 'real_estate') {
+            if (queryCategory === 'Konut') return getBrandCount(counts.konut.types, pType);
+            if (queryCategory === 'İş Yeri') return getBrandCount(counts.workplace.types, pType);
+            if (queryCategory === 'Arsa') return getBrandCount(counts.land.types, pType);
+        } else if (type === 'vehicle') {
             if (queryCategory === 'Otomobil') return getBrandCount(counts.vasita.automobile.brands, pType);
             if (queryCategory === 'Arazi, SUV & Pickup') return getBrandCount(counts.vasita.suv.brands, pType);
             if (queryCategory === 'Motosiklet') return getBrandCount(counts.vasita.motorcycle.brands, pType);
@@ -451,41 +469,46 @@ export default function FilterSidebar({ counts }: FilterSidebarProps) {
                                 {/* Level 2: Sale/Rent (Only if Level 1 is selected) */}
                                 {currentCategory === (cat as any).queryCategory && (
                                     <div className="ml-3 mt-1 space-y-1 border-l-2 border-gray-200 pl-2">
-                                        {cat.subcategories.map((sub) => (
-                                            <div key={sub.name}>
-                                                <button
-                                                    onClick={() => handleCategoryClick(cat.type, sub.value, (cat as any).queryCategory)}
-                                                    className={`w-full text-left px-2 py-1 rounded flex justify-between items-center text-xs ${currentListingType === sub.value && !currentPropertyType
-                                                        ? 'text-blue-600 font-bold bg-blue-50/50'
-                                                        : 'text-gray-600 hover:text-blue-600'
-                                                        }`}
-                                                >
-                                                    <span>{sub.name}</span>
-                                                </button>
+                                        {cat.subcategories.map((sub) => {
+                                            if (sub.count === 0) return null;
+                                            return (
+                                                <div key={sub.name}>
+                                                    <button
+                                                        onClick={() => handleCategoryClick(cat.type, sub.value, (cat as any).queryCategory)}
+                                                        className={`w-full text-left px-2 py-1 rounded flex justify-between items-center text-xs ${currentListingType === sub.value && !currentPropertyType
+                                                            ? 'text-blue-600 font-bold bg-blue-50/50'
+                                                            : 'text-gray-600 hover:text-blue-600'
+                                                            }`}
+                                                    >
+                                                        <span>{sub.name}</span>
+                                                        <span className="text-gray-400 text-[10px]">({sub.count})</span>
+                                                    </button>
 
-                                                {/* Level 3: Property Types (Only if Level 2 is selected) */}
-                                                {currentListingType === sub.value && (
-                                                    <div className="ml-3 mt-1 space-y-0.5 border-l border-gray-200 pl-2">
-                                                        {getSubTypes(cat.type, (cat as any).queryCategory, sub.value).map((pType: string) => {
-                                                            const count = getCount(cat.type, (cat as any).queryCategory, pType);
-                                                            return (
-                                                                <button
-                                                                    key={pType}
-                                                                    onClick={() => handleCategoryClick(cat.type, sub.value, (cat as any).queryCategory, pType)}
-                                                                    className={`w-full text-left px-2 py-0.5 rounded text-[11px] flex justify-between ${currentPropertyType === pType
-                                                                        ? 'text-blue-600 font-bold'
-                                                                        : 'text-gray-500 hover:text-blue-500'
-                                                                        }`}
-                                                                >
-                                                                    <span>{pType}</span>
-                                                                    <span className="text-gray-400 text-[9px]">({count})</span>
-                                                                </button>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))}
+                                                    {/* Level 3: Property Types (Only if Level 2 is selected) */}
+                                                    {currentListingType === sub.value && (
+                                                        <div className="ml-3 mt-1 space-y-0.5 border-l border-gray-200 pl-2">
+                                                            {getSubTypes(cat.type, (cat as any).queryCategory, sub.value).map((pType: string) => {
+                                                                const count = getCount(cat.type, (cat as any).queryCategory, pType, sub.value);
+                                                                if (count === 0) return null;
+                                                                return (
+                                                                    <button
+                                                                        key={pType}
+                                                                        onClick={() => handleCategoryClick(cat.type, sub.value, (cat as any).queryCategory, pType)}
+                                                                        className={`w-full text-left px-2 py-0.5 rounded text-[11px] flex justify-between ${currentPropertyType === pType
+                                                                            ? 'text-blue-600 font-bold'
+                                                                            : 'text-gray-500 hover:text-blue-500'
+                                                                            }`}
+                                                                    >
+                                                                        <span>{pType}</span>
+                                                                        <span className="text-gray-400 text-[9px]">({count})</span>
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>
@@ -513,41 +536,46 @@ export default function FilterSidebar({ counts }: FilterSidebarProps) {
                                 {/* Level 2: Sale/Rent */}
                                 {currentCategory === (cat as any).queryCategory && (
                                     <div className="ml-3 mt-1 space-y-1 border-l-2 border-gray-200 pl-2">
-                                        {cat.subcategories.map((sub) => (
-                                            <div key={sub.name}>
-                                                <button
-                                                    onClick={() => handleCategoryClick(cat.type, sub.value, (cat as any).queryCategory)}
-                                                    className={`w-full text-left px-2 py-1 rounded flex justify-between items-center text-xs ${currentListingType === sub.value
-                                                        ? 'text-blue-600 font-bold bg-blue-50/50'
-                                                        : 'text-gray-600 hover:text-blue-600'
-                                                        }`}
-                                                >
-                                                    <span>{sub.name}</span>
-                                                </button>
+                                        {cat.subcategories.map((sub) => {
+                                            if (sub.count === 0) return null;
+                                            return (
+                                                <div key={sub.name}>
+                                                    <button
+                                                        onClick={() => handleCategoryClick(cat.type, sub.value, (cat as any).queryCategory)}
+                                                        className={`w-full text-left px-2 py-1 rounded flex justify-between items-center text-xs ${currentListingType === sub.value
+                                                            ? 'text-blue-600 font-bold bg-blue-50/50'
+                                                            : 'text-gray-600 hover:text-blue-600'
+                                                            }`}
+                                                    >
+                                                        <span>{sub.name}</span>
+                                                        <span className="text-gray-400 text-[10px]">({sub.count})</span>
+                                                    </button>
 
-                                                {/* Level 3: Vehicle Brands */}
-                                                {currentListingType === sub.value && (
-                                                    <div className="ml-3 mt-1 space-y-0.5 border-l border-gray-200 pl-2">
-                                                        {getSubTypes(cat.type, (cat as any).queryCategory, sub.value).map((pType: string) => {
-                                                            const count = getCount(cat.type, (cat as any).queryCategory, pType, sub.value);
-                                                            return (
-                                                                <button
-                                                                    key={pType}
-                                                                    onClick={() => handleCategoryClick(cat.type, sub.value, (cat as any).queryCategory, pType)}
-                                                                    className={`w-full text-left px-2 py-0.5 rounded text-[11px] flex justify-between ${currentPropertyType === pType
-                                                                        ? 'text-blue-600 font-bold'
-                                                                        : 'text-gray-500 hover:text-blue-500'
-                                                                        }`}
-                                                                >
-                                                                    <span>{pType}</span>
-                                                                    <span className="text-gray-400 text-[9px]">({count})</span>
-                                                                </button>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))}
+                                                    {/* Level 3: Vehicle Brands */}
+                                                    {currentListingType === sub.value && (
+                                                        <div className="ml-3 mt-1 space-y-0.5 border-l border-gray-200 pl-2">
+                                                            {getSubTypes(cat.type, (cat as any).queryCategory, sub.value).map((pType: string) => {
+                                                                const count = getCount(cat.type, (cat as any).queryCategory, pType, sub.value);
+                                                                if (count === 0) return null;
+                                                                return (
+                                                                    <button
+                                                                        key={pType}
+                                                                        onClick={() => handleCategoryClick(cat.type, sub.value, (cat as any).queryCategory, pType)}
+                                                                        className={`w-full text-left px-2 py-0.5 rounded text-[11px] flex justify-between ${currentPropertyType === pType
+                                                                            ? 'text-blue-600 font-bold'
+                                                                            : 'text-gray-500 hover:text-blue-500'
+                                                                            }`}
+                                                                    >
+                                                                        <span>{pType}</span>
+                                                                        <span className="text-gray-400 text-[9px]">({count})</span>
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>
@@ -555,15 +583,115 @@ export default function FilterSidebar({ counts }: FilterSidebarProps) {
                     </div>
 
                     {/* PARTS GROUP */}
-                    <div className="pb-2">
+                    <div className="pb-2 border-b-4 border-gray-300 dark:border-gray-700">
+                        <h3 className="font-bold text-gray-900 dark:text-gray-100 pl-1 mb-2 text-sm uppercase">{t('cat_part')}</h3>
                         {categoriesData.filter(c => c.type === 'part').map((cat) => (
-                            <div key={cat.name}>
+                            <div key={cat.name} className="mb-1">
                                 <button
-                                    onClick={() => handleCategoryClick(cat.type, '')}
-                                    className={`w-full text-left font-bold text-sm uppercase px-1 py-1 ${currentType === 'part' ? 'text-blue-700' : 'text-gray-900 dark:text-gray-100'}`}
+                                    onClick={() => handleCategoryClick(cat.type, '', (cat as any).queryCategory)} // Ensure queryCategory 'Yedek Parça' is set
+                                    className={`w-full text-left px-2 py-1.5 rounded flex justify-between items-center transition-all ${currentType === cat.type && currentCategory === (cat as any).queryCategory
+                                        ? 'font-bold text-blue-700 bg-blue-50'
+                                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100'
+                                        }`}
                                 >
-                                    {cat.name}
+                                    <span>{cat.name}</span>
+                                    <span className="text-[10px] text-gray-400">({cat.count?.toLocaleString()})</span>
                                 </button>
+
+                                {/* Level 2: Part Subcategories (Otomotiv, Motosiklet) */}
+                                {(currentCategory === (cat as any).queryCategory || cat.subcategories.some(s => s.value === currentCategory)) && (
+                                    <div className="ml-3 mt-1 space-y-1 border-l-2 border-gray-200 pl-2">
+                                        {cat.subcategories.map((sub) => {
+                                            if (sub.count === 0) return null;
+                                            return (
+                                                <div key={sub.name}>
+                                                    <button
+                                                        onClick={() => handleCategoryClick(cat.type, '', sub.value)}
+                                                        className={`w-full text-left px-2 py-1 rounded flex justify-between items-center text-xs ${currentCategory === sub.value
+                                                            ? 'text-blue-600 font-bold bg-blue-50/50'
+                                                            : 'text-gray-600 hover:text-blue-600'
+                                                            }`}
+                                                    >
+                                                        <span>{sub.name}</span>
+                                                        <span className="text-gray-400 text-[10px]">({sub.count})</span>
+                                                    </button>
+
+                                                    {/* Level 3: Sale (Satılık) - Hardcoded for now as it's the only option usually */}
+                                                    {currentCategory === sub.value && (
+                                                        <div className="ml-3 mt-1 space-y-0.5 border-l border-gray-200 pl-2">
+                                                            {['Satılık'].map((lType) => {
+                                                                if (sub.count === 0) return null;
+                                                                return (
+                                                                    <div key={lType}>
+                                                                        <button
+                                                                            onClick={() => handleCategoryClick(cat.type, 'Sale', sub.value)}
+                                                                            className={`w-full text-left px-2 py-0.5 rounded text-[11px] flex justify-between ${currentListingType === 'Sale'
+                                                                                ? 'text-blue-600 font-bold'
+                                                                                : 'text-gray-500 hover:text-blue-500'
+                                                                                }`}
+                                                                        >
+                                                                            <span>{lType}</span>
+                                                                            <span className="text-gray-400 text-[9px]">({sub.count})</span>
+                                                                        </button>
+                                                                        {/* Level 4: Types (Aksesuar, Yedek Parça etc) */}
+                                                                        {currentListingType === 'Sale' && (
+                                                                            <div className="ml-3 mt-1 space-y-0.5 border-l border-gray-200 pl-2">
+                                                                                {getSubTypes(cat.type, sub.value, 'Sale').map((pType: string) => {
+                                                                                    // Assuming parts sub-types shouldn't necessarily be hidden without true counts, but let's hide if sub.count === 0 overall
+                                                                                    return (
+                                                                                        <div key={pType}>
+                                                                                            <button
+                                                                                                onClick={() => handleCategoryClick(cat.type, 'Sale', sub.value, pType)}
+                                                                                                className={`w-full text-left px-2 py-0.5 rounded text-[11px] flex justify-between ${currentPropertyType === pType
+                                                                                                    ? 'text-blue-600 font-bold'
+                                                                                                    : 'text-gray-500 hover:text-blue-500'
+                                                                                                    }`}
+                                                                                            >
+                                                                                                <span>{pType}</span>
+                                                                                            </button>
+
+                                                                                            {/* Brand List Injection */}
+                                                                                            {pType === 'Yedek Parça' && currentPropertyType === 'Yedek Parça' && (
+                                                                                                <div className="ml-2 mt-1 border-l border-gray-200 pl-2 space-y-0.5">
+                                                                                                    {(() => {
+                                                                                                        // Fetch Brands based on parent category
+                                                                                                        let brands: string[] = [];
+                                                                                                        if (sub.value === 'Otomotiv Ekipmanları') {
+                                                                                                            brands = CATEGORY_DATA['Vasıta']?.subcategories['Otomobil']?.types['Satılık'] || [];
+                                                                                                        } else if (sub.value === 'Motosiklet Ekipmanları') {
+                                                                                                            brands = CATEGORY_DATA['Vasıta']?.subcategories['Motosiklet']?.types['Satılık'] || [];
+                                                                                                        }
+
+                                                                                                        return brands.map(brandName => (
+                                                                                                            <button
+                                                                                                                key={brandName}
+                                                                                                                onClick={() => updateURL({ brand: brand === brandName ? null : brandName })} // Toggle
+                                                                                                                className={`w-full text-left px-2 py-0.5 rounded text-[10px] truncate ${brand === brandName
+                                                                                                                    ? 'text-blue-600 font-bold bg-blue-50'
+                                                                                                                    : 'text-gray-500 hover:text-gray-900'
+                                                                                                                    }`}
+                                                                                                            >
+                                                                                                                {brandName}
+                                                                                                            </button>
+                                                                                                        ));
+                                                                                                    })()}
+                                                                                                </div>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    );
+                                                                                })}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -700,22 +828,6 @@ export default function FilterSidebar({ counts }: FilterSidebarProps) {
                     </>
                 )}
 
-                {/* Part Specific Filters */}
-                {isPartCurrent && (
-                    <>
-                        <hr className="border-gray-100 dark:border-gray-700" />
-                        <div className="space-y-2">
-                            <h4 className="font-bold text-gray-700 dark:text-gray-300 px-1">Brand / Marka</h4>
-                            <input
-                                type="text"
-                                placeholder="Search Brand..."
-                                className="w-full h-7 px-2 border rounded text-xs outline-none focus:border-blue-500 bg-white dark:bg-gray-700"
-                                value={brand}
-                                onChange={(e) => setBrand(e.target.value)}
-                            />
-                        </div>
-                    </>
-                )}
 
                 <hr className="border-gray-100 dark:border-gray-700" />
 
@@ -736,14 +848,14 @@ export default function FilterSidebar({ counts }: FilterSidebarProps) {
                         </CollapsibleSection>
                     ))}
                 </div>
-            </div>
+            </div >
 
             {/* Sticky Footer */}
-            <div className="absolute bottom-0 w-full p-2 border-t bg-white dark:bg-gray-800 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+            < div className="absolute bottom-0 w-full p-2 border-t bg-white dark:bg-gray-800 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]" >
                 <Button onClick={handleSearch} className="w-full h-9 bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md">
                     {t('btn_search')}
                 </Button>
-            </div>
+            </div >
         </aside >
     );
 }

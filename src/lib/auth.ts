@@ -75,6 +75,7 @@ export async function getSession() {
                 email: users.email,
                 role: users.role,
                 phone: users.phone,
+                companyName: users.companyName,
             },
             session: sessions,
         })

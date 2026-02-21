@@ -4,7 +4,7 @@ import { useActionState } from 'react';
 import { updateProfile } from './actions';
 import { Button } from '@/components/ui/button';
 
-export function ProfileForm({ user }: { user: { name: string; email: string; phone: string | null } }) {
+export function ProfileForm({ user }: { user: { name: string; email: string; phone: string | null; companyName: string | null } }) {
     const [state, action, isPending] = useActionState(updateProfile, null); // Use undefined or null as initial state
 
     return (
@@ -50,6 +50,16 @@ export function ProfileForm({ user }: { user: { name: string; email: string; pho
                     className="w-full p-2 border rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600"
                 />
                 {state?.errors?.phone && <p className="text-red-500 text-xs mt-1">{state.errors.phone[0]}</p>}
+            </div>
+            <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Company Name</label>
+                <input
+                    name="companyName"
+                    defaultValue={user.companyName || ''}
+                    placeholder="E.g. İnmersin Ajans"
+                    className="w-full p-2 border rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600"
+                />
+                {state?.errors?.companyName && <p className="text-red-500 text-xs mt-1">{state.errors.companyName[0]}</p>}
             </div>
             <Button type="submit" disabled={isPending}>
                 {isPending ? 'Updating...' : 'Update Profile'}

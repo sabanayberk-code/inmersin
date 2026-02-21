@@ -16,7 +16,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ locale
             {/* Profile Info Form */}
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
                 <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100">Personal Information</h2>
-                <ProfileForm user={{ name: user.name, email: user.email, phone: user.phone }} />
+                <ProfileForm user={{ name: user.name, email: user.email, phone: user.phone, companyName: user.companyName as string | null }} />
             </div>
 
             {/* Change Password Form */}

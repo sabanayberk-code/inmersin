@@ -1,8 +1,11 @@
+'use client';
+
 import Image from 'next/image';
 import { Link } from '@/i18n/routing';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Bed, Bath, Move, Calendar } from 'lucide-react';
+import { MapPin, Bed, Bath, Move, Calendar, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 
 interface ListingTableViewProps {
     listings: any[];
@@ -12,6 +15,21 @@ interface ListingTableViewProps {
 export default function ListingTableView({ listings, locale }: ListingTableViewProps) {
     const tForm = useTranslations('Form');
     const tProp = useTranslations('PropertyDetails');
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const pathname = usePathname();
+
+    const currentSort = searchParams.get('sort') || 'date_desc';
+
+    const togglePriceSort = () => {
+        const params = new URLSearchParams(searchParams.toString());
+        if (currentSort === 'price_asc') {
+            params.set('sort', 'price_desc');
+        } else {
+            params.set('sort', 'price_asc');
+        }
+        router.push(`${pathname}?${params.toString()}`);
+    };
 
     // Detect predominant type or if mixed
     const isAllVehicles = listings.length > 0 && listings.every(l => l.type === 'vehicle');
@@ -64,8 +82,19 @@ export default function ListingTableView({ listings, locale }: ListingTableViewP
                             </>
                         )}
 
-                        <th scope="col" className="px-4 py-3 font-bold text-center">
-                            {tForm('price')}
+                        <th
+                            scope="col"
+                            className="px-4 py-3 font-bold text-center cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors select-none group rounded-md"
+                            onClick={togglePriceSort}
+                        >
+                            <div className="flex items-center justify-center gap-1">
+                                {tForm('price')}
+                                <span className="text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
+                                    {currentSort === 'price_asc' ? <ArrowUp className="w-4 h-4 text-blue-600 dark:text-blue-400" /> :
+                                        currentSort === 'price_desc' ? <ArrowDown className="w-4 h-4 text-blue-600 dark:text-blue-400" /> :
+                                            <ArrowUpDown className="w-3.5 h-3.5" />}
+                                </span>
+                            </div>
                         </th>
                         <th scope="col" className="px-4 py-3 font-bold text-center">
                             {tProp('listingDate')}

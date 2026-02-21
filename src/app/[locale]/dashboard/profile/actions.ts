@@ -11,6 +11,7 @@ import { getTranslations } from 'next-intl/server';
 const profileSchema = z.object({
     name: z.string().min(2),
     phone: z.string().optional(),
+    companyName: z.string().optional(),
 });
 
 const passwordSchema = z.object({
@@ -28,10 +29,10 @@ export async function updateProfile(prevState: any, formData: FormData) {
         return { errors: result.error.flatten().fieldErrors };
     }
 
-    const { name, phone } = result.data;
+    const { name, phone, companyName } = result.data;
 
     await db.update(users)
-        .set({ name, phone })
+        .set({ name, phone, companyName })
         .where(eq(users.id, user.id));
 
     revalidatePath('/[locale]/dashboard/profile');

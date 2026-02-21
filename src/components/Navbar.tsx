@@ -3,6 +3,7 @@
 import { Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import LanguageSwitcher from './LanguageSwitcher';
+import { Phone, MessageCircle } from 'lucide-react';
 
 import { logout } from '@/app/[locale]/auth/actions';
 
@@ -26,10 +27,16 @@ export default function Navbar({ user }: NavbarProps) {
                 </Link>
             </div>
 
-            <div className="hidden md:flex items-center gap-8">
-                <Link href="/contact" className="text-sm font-medium hover:text-blue-600 transition-colors">
-                    {t('contact')}
-                </Link>
+            <div className="flex items-center gap-3 md:gap-6 bg-gray-50/50 dark:bg-gray-800/50 px-3 py-1.5 md:px-4 md:py-2 rounded-full border border-gray-100 dark:border-gray-800 absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0 order-last md:order-none mt-4 md:mt-0 w-max">
+                <a href="tel:+905327054990" className="flex items-center gap-1.5 text-[13px] md:text-sm font-bold text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 transition-colors">
+                    <Phone className="w-3.5 h-3.5 md:w-4 md:h-4 text-blue-600" />
+                    <span className="hidden sm:inline">Destek:</span> 0532 705 49 90
+                </a>
+                <div className="w-[1px] h-4 bg-gray-300 dark:bg-gray-600"></div>
+                <a href="https://wa.me/905327054990" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-[13px] md:text-sm font-bold text-green-600 hover:text-green-500 transition-colors">
+                    <MessageCircle className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                    <span className="hidden sm:inline">WhatsApp</span>
+                </a>
             </div>
 
             <div className="flex items-center gap-4">
@@ -39,16 +46,10 @@ export default function Navbar({ user }: NavbarProps) {
                     {t('postAd')}
                 </Link>
 
-                {user?.role === 'admin' && (
-                    <Link href="/admin/users" className="hidden sm:inline-flex h-9 items-center justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-red-700/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-colors">
-                        Admin
-                    </Link>
-                )}
-
                 {user ? (
                     <div className="flex items-center gap-4">
-                        <Link href="/dashboard" className="text-sm font-medium hover:text-blue-600 transition-colors">
-                            {t('dashboard')}
+                        <Link href="/dashboard" className="hidden sm:inline-flex h-9 items-center justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-red-700/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-colors">
+                            {t('dashboard') || "Panel"}
                         </Link>
                         <span className="text-sm font-medium hidden md:block">{user.name}</span>
                         <button onClick={() => logout()} className="text-sm font-medium text-red-600 hover:text-red-500">

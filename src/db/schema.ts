@@ -13,6 +13,7 @@ export const users = sqliteTable("users", {
     email: text("email").notNull().unique(),
     passwordHash: text("password_hash").notNull(),
     phone: text("phone"),
+    companyName: text("company_name"),
     role: text("role").$type<typeof ROLES[number]>().default("agent"),
     languages: text("languages", { mode: "json" }).$type<string[]>(), // Store array as JSON
     createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(unixepoch())`),
@@ -40,6 +41,7 @@ export const listings = sqliteTable("listings", {
     status: text("status").$type<typeof STATUSES[number]>().default("draft"),
     isShowcase: integer("is_showcase", { mode: "boolean" }).default(false), // Showcase on homepage
     viewCount: integer("view_count").default(0),
+    serialCode: text("serial_code").unique(), // E-12345, V-12345, YP-12345
     createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(cast(unixepoch() * 1000 as integer))`),
     updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(cast(unixepoch() * 1000 as integer))`),
 });
@@ -59,6 +61,15 @@ export const media = sqliteTable("media", {
     url: text("url").notNull(),
     type: text("type").default("image"),
     order: integer("order").default(0),
+});
+
+export const brandRequests = sqliteTable("brand_requests", {
+    id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+    name: text("name").notNull(),
+    parentCategory: text("parent_category").notNull(), // 'Otomobil', 'Motosiklet Ekipmanları' vs
+    status: text("status").$type<"pending" | "approved" | "rejected">().default("pending"),
+    requestedBy: integer("requested_by").references(() => users.id), // Can be null if guest allowed, else required
+    createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(unixepoch())`),
 });
 
 // Relations
@@ -86,5 +97,12 @@ export const mediaRelations = relations(media, ({ one }) => ({
     listing: one(listings, {
         fields: [media.listingId],
         references: [listings.id],
+    }),
+}));
+
+export const brandRequestsRelations = relations(brandRequests, ({ one }) => ({
+    user: one(users, {
+        fields: [brandRequests.requestedBy],
+        references: [users.id],
     }),
 }));

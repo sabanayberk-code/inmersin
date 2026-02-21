@@ -16,7 +16,7 @@ export default function ImageUpload({ value, onChange, placeholder }: ImageUploa
     const [uploading, setUploading] = useState(false);
     const t = useTranslations('Form');
 
-    const MAX_IMAGES = 10;
+    const MAX_IMAGES = 12;
 
     const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
@@ -48,7 +48,8 @@ export default function ImageUpload({ value, onChange, placeholder }: ImageUploa
 
                 let fileToUpload = file;
 
-                // Only compress if image
+                /* 
+                // Skip compression for now as it might be causing issues
                 if (file.type.startsWith('image/')) {
                     try {
                         const compressedFile = await imageCompression(file, options);
@@ -56,7 +57,8 @@ export default function ImageUpload({ value, onChange, placeholder }: ImageUploa
                     } catch (error) {
                         console.error("Compression failed, using original file", error);
                     }
-                }
+                } 
+                */
 
                 // Upload
                 const formData = new FormData();
@@ -124,6 +126,8 @@ export default function ImageUpload({ value, onChange, placeholder }: ImageUploa
                             alt={`Listing Image ${index + 1}`}
                             fill
                             className="object-cover"
+                            unoptimized // Debugging image load issue
+                            onError={(e) => console.error("Image load error:", url, e)}
                         />
 
                         {/* Overlay Actions */}

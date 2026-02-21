@@ -104,12 +104,7 @@ export const CATEGORY_DATA: Record<string, any> = {
                     'Kiralık': ['Otomobil', 'Scooter']
                 }
             },
-            'Deniz Araçları': {
-                types: {
-                    'Satılık': ['Tekne', 'Yat', 'Bot', 'Jetski', 'Yelkenli'],
-                    'Kiralık': ['Tekne', 'Yat', 'Gulet']
-                }
-            }
+
         }
     },
     'Yedek Parça': {
@@ -124,11 +119,7 @@ export const CATEGORY_DATA: Record<string, any> = {
                     'Satılık': ['Kask', 'Kıyafet', 'Aksesuar', 'Yedek Parça', 'Egzoz']
                 }
             },
-            'Deniz Aracı Ekipmanları': {
-                types: {
-                    'Satılık': ['Motor', 'Yelken', 'Elektronik', 'Güvenlik', 'Aksesuar']
-                }
-            }
+
         }
     }
 };

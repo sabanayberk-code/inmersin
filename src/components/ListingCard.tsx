@@ -19,8 +19,8 @@ interface ListingCardProps {
 }
 
 export default function ListingCard({
-    id, title, price, currency, location, features, imageUrl, locale
-}: ListingCardProps) {
+    id, title, price, currency, location, features, imageUrl, locale, ...props
+}: ListingCardProps & { serialCode?: string }) {
     const t = useTranslations('PropertyDetails');
 
     // Simple currency formatter
@@ -29,6 +29,8 @@ export default function ListingCard({
         currency: currency,
         maximumFractionDigits: 0
     }).format(price);
+
+    const code = props.serialCode || `#${id}`;
 
     return (
         <Link href={`/properties/${id}`} className="block group">
@@ -44,7 +46,7 @@ export default function ListingCard({
                         {formattedPrice}
                     </Badge>
                     <Badge className="absolute top-2 left-2 bg-blue-600/90 text-white hover:bg-blue-700/90 mix-blend-hard-light backdrop-blur-md shadow-md border border-white/20">
-                        NO: #{id}
+                        NO: {code}
                     </Badge>
                 </div>
                 <CardContent className="p-4 flex flex-col flex-grow">

@@ -16,7 +16,7 @@ export default async function EditListingPage({
         redirect({ href: '/auth/login', locale });
     }
 
-    const listing = await getListing(parseInt(id), 'en'); // Fetch raw-ish data, locale doesn't matter much for core fields
+    const listing = await getListing(parseInt(id), locale); // Use current locale
 
     if (!listing) return notFound();
 

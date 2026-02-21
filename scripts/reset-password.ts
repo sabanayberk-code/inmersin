@@ -5,7 +5,7 @@ import { hashPassword } from "../src/lib/auth";
 import { eq } from "drizzle-orm";
 
 async function main() {
-    const email = "demo@antigravity.tr"; // The user from src/db/seed.ts
+    const email = "sabanayberk@gmail.com"; // The user from src/db/seed.ts
     const newPassword = "123456";
 
     console.log(`Resetting password for ${email}...`);

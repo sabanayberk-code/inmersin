@@ -41,15 +41,26 @@ export default async function PropertyDetailsPage({ params }: { params: Promise<
         // Try prefixed key first (e.g. val_parking_open)
         if (prefix) {
             const prefixedKey = `val_${prefix}_${safeKey}`;
-            const translated = t(prefixedKey as any);
-            // If translation exists (doesn't return key)
-            if (translated !== prefixedKey && !translated.includes('PropertyDetails.')) return translated;
+            try {
+                const translated = t(prefixedKey as any);
+                if (translated !== prefixedKey && !translated.includes('PropertyDetails.')) return translated;
+            } catch (e) {
+                // Ignore missing translation
+            }
         }
 
         // Fallback to generic key
         const genericKey = `val_${safeKey}`;
-        const translatedGeneric = t(genericKey as any);
-        return translatedGeneric !== genericKey && !translatedGeneric.includes('PropertyDetails.') ? translatedGeneric : key;
+        try {
+            const translatedGeneric = t(genericKey as any);
+            if (translatedGeneric !== genericKey && !translatedGeneric.includes('PropertyDetails.')) {
+                return translatedGeneric;
+            }
+        } catch (e) {
+            // Ignore missing translation
+        }
+
+        return key;
     };
 
     // Attribute Table Data
@@ -58,7 +69,7 @@ export default async function PropertyDetailsPage({ params }: { params: Promise<
     if (property.type === 'vehicle') {
         const vehicleFeats = f as any;
         attributes = [
-            { label: t('listingNo'), value: property.id, highlight: true },
+            { label: t('listingNo'), value: property.serialCode || '#' + property.id, highlight: true },
             { label: t('listingDate'), value: dateStr },
             { label: t('lbl_brand'), value: vehicleFeats.propertyType || '-' },
             { label: t('lbl_model'), value: vehicleFeats.model || '-' },
@@ -79,7 +90,7 @@ export default async function PropertyDetailsPage({ params }: { params: Promise<
     } else if (property.type === 'part') {
         const partFeats = f as any;
         attributes = [
-            { label: t('listingNo'), value: property.id, highlight: true },
+            { label: t('listingNo'), value: property.serialCode || '#' + property.id, highlight: true },
             { label: t('listingDate'), value: dateStr },
             { label: 'Category', value: partFeats.category || '-' },
             { label: 'Condition', value: partFeats.condition || '-' },
@@ -90,7 +101,7 @@ export default async function PropertyDetailsPage({ params }: { params: Promise<
     } else {
         // Real Estate (Default)
         attributes = [
-            { label: t('listingNo'), value: property.id, highlight: true },
+            { label: t('listingNo'), value: property.serialCode || '#' + property.id, highlight: true },
             { label: t('listingDate'), value: dateStr },
             { label: t('type'), value: `${(f.type || f.listingType) === 'Rent' ? t('rent') : t('sale')}${f.category ? ' ' + t(f.category.toLowerCase()) : ''}` },
             { label: t('grossArea'), value: f.area },
@@ -183,7 +194,7 @@ export default async function PropertyDetailsPage({ params }: { params: Promise<
                         {/* Agent Card */}
                         <div className="border rounded-lg p-4 bg-white dark:bg-gray-800 shadow-sm">
                             <div className="text-center mb-3 border-b pb-2">
-                                <h4 className="font-bold text-blue-800 dark:text-blue-400 uppercase text-xs">Antigravity Emlak</h4>
+                                <h4 className="font-bold text-blue-800 dark:text-blue-400 text-xs">{property.agent?.companyName || 'inmersin ajans'}</h4>
                             </div>
 
                             <div className="flex flex-col items-center mb-3">

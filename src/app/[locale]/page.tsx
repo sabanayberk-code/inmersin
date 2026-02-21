@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { getListings, getListingCounts } from '@/actions/getListings';
 import ListingCard from '@/components/ListingCard';
 import FilterSidebar from '@/components/FilterSidebar';
+import MobileFilterWrapper from '@/components/MobileFilterWrapper';
 import SortDropdown from '@/components/SortDropdown';
 import ViewToggle from '@/components/ViewToggle';
 import ListingTableView from '@/components/ListingTableView';
@@ -83,25 +84,14 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
 
   return (
     <div className="container mx-auto px-4 py-6 min-h-screen">
-      <section className="mb-6 border-b pb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          {t('title')}
-        </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">
-          {t('subtitle')}
-        </p>
-      </section>
-
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 relative">
-        <div className="hidden lg:block lg:col-span-2 sticky top-24 h-[calc(100vh-10rem)]">
-          <FilterSidebar counts={counts} />
+        <div className="lg:col-span-2 lg:sticky lg:top-24 lg:h-[calc(100vh-10rem)]">
+          <MobileFilterWrapper>
+            <FilterSidebar counts={counts} />
+          </MobileFilterWrapper>
         </div>
 
-        <div className="lg:hidden mb-4">
-          <button className="w-full py-2 bg-blue-600 text-white rounded font-bold">
-            Filtrele
-          </button>
-        </div>
+
 
         <div className="lg:col-span-10 space-y-12">
 
@@ -126,6 +116,7 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
                   <ListingCard
                     key={property.id}
                     {...property}
+                    serialCode={property.serialCode ?? undefined} // null ise undefined'a çeviriyoruz
                     locale={locale}
                   />
                 ))}

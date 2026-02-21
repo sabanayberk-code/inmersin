@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTranslations } from "next-intl";
 
-export default function PartFields() {
+export default function PartFields({ isEditMode }: { isEditMode?: boolean }) {
     const { register, setValue, watch, formState: { errors } } = useFormContext();
     const t = useTranslations('Form');
 
@@ -34,7 +34,12 @@ export default function PartFields() {
                 {/* Brand */}
                 <div className="space-y-2">
                     <Label>{t('lbl_brand')}</Label>
-                    <Input {...register("features.brand")} placeholder="e.g. Bosch, Valeo, OEM" />
+                    <Input
+                        {...register("features.brand")}
+                        placeholder="e.g. Bosch, Valeo, OEM"
+                        readOnly={true}
+                        className="bg-gray-100 dark:bg-gray-800 text-gray-500 cursor-not-allowed pointer-events-none"
+                    />
                 </div>
 
                 {/* OEM No */}

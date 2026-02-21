@@ -19,31 +19,42 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
 
     const agent = new ListingAgent();
     // Assuming agent.getListingsByAgent returns listings with { id, title, image, price, currency, viewCount, status }
-    const listings = await agent.getListingsByAgent(user!.id);
+    let listings: any[] = [];
+    if (user?.role === 'admin') {
+        listings = await agent.getAllListings();
+    } else if (user?.id) { // Burada ID'nin var olduğunu kontrol ediyoruz
+        listings = await agent.getListingsByAgent(user.id);
+    } else {
+        listings = []; // Eğer kullanıcı veya ID yoksa boş liste döner
+    }
 
     return (
         <div className="container mx-auto px-4 py-8 min-h-screen">
             <h1 className="text-3xl font-bold mb-8 text-gray-800 dark:text-gray-100">{t('myListings')}</h1>
 
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-                <table className="w-full text-left">
+                <table className="w-full text-left text-sm">
                     <thead className="bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 uppercase text-xs font-semibold">
                         <tr>
-                            <th className="p-4">{t('image')}</th>
-                            <th className="p-4">{t('title')}</th>
-                            <th className="p-4 hidden md:table-cell">{t('location')}</th>
-                            <th className="p-4">{t('price')}</th>
-                            <th className="p-4 hidden md:table-cell">{t('listingDate')}</th>
-                            <th className="p-4">{t('status')} / {t('daysLeft')}</th>
-                            <th className="p-4">{t('views')}</th>
-                            <th className="p-4 text-right">{t('actions')}</th>
+                            <th className="px-3 py-2">No</th>
+                            <th className="px-3 py-2">{t('image')}</th>
+                            <th className="px-3 py-2">{t('title')}</th>
+                            <th className="px-3 py-2 hidden lg:table-cell">{t('location')}</th>
+                            <th className="px-3 py-2">{t('price')}</th>
+                            <th className="px-3 py-2 hidden xl:table-cell">{t('listingDate')}</th>
+                            <th className="px-3 py-2">{t('status')}</th>
+                            <th className="px-3 py-2">{t('views')}</th>
+                            <th className="px-3 py-2 text-right">{t('actions')}</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                         {listings.map((listing) => (
                             <tr key={listing.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                <td className="p-4">
-                                    <div className="w-16 h-12 relative rounded overflow-hidden bg-gray-200">
+                                <td className="px-3 py-2 font-mono text-xs text-gray-500 whitespace-nowrap">
+                                    {(listing as any).serialCode || `#${listing.id}`}
+                                </td>
+                                <td className="px-3 py-2">
+                                    <div className="w-12 h-8 relative rounded overflow-hidden bg-gray-200">
                                         {listing.image ? (
                                             <Image
                                                 src={listing.image}
@@ -52,31 +63,31 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
                                                 className="object-cover"
                                             />
                                         ) : (
-                                            <div className="flex items-center justify-center h-full text-gray-400 text-xs">No Img</div>
+                                            <div className="flex items-center justify-center h-full text-gray-400 text-[10px]">No Img</div>
                                         )}
                                     </div>
                                 </td>
-                                <td className="p-4 font-medium text-gray-900 dark:text-gray-100 max-w-xs truncate">
+                                <td className="px-3 py-2 font-medium text-gray-900 dark:text-gray-100 max-w-[120px] sm:max-w-[160px] md:max-w-[200px] truncate" title={listing.title}>
                                     {listing.title}
                                 </td>
-                                <td className="p-4 hidden md:table-cell text-sm text-gray-500">
+                                <td className="px-3 py-2 hidden lg:table-cell text-gray-500 truncate max-w-[120px]" title={listing.location ? `${listing.location.city || ''} / ${listing.location.district || ''}` : ''}>
                                     {listing.location ? (
                                         `${listing.location.city || ''} / ${listing.location.district || ''}`
                                     ) : '-'}
                                 </td>
-                                <td className="p-4 text-gray-600 dark:text-gray-300">
+                                <td className="px-3 py-2 text-gray-600 dark:text-gray-300 whitespace-nowrap">
                                     {new Intl.NumberFormat(locale === 'tr' ? 'tr-TR' : 'en-US', {
                                         style: 'currency',
                                         currency: listing.currency || 'USD',
                                         maximumFractionDigits: 0
                                     }).format(listing.price)}
                                 </td>
-                                <td className="p-4 hidden md:table-cell text-sm text-gray-500">
+                                <td className="px-3 py-2 hidden xl:table-cell text-gray-500 whitespace-nowrap">
                                     {listing.createdAt ? new Date(listing.createdAt).toLocaleDateString(locale) : '-'}
                                 </td>
-                                <td className="p-4">
-                                    <div className="flex flex-col gap-1">
-                                        <span className={`px-2 py-1 rounded text-xs font-bold inline-block w-fit ${listing.status === 'published' ? 'bg-green-100 text-green-700' :
+                                <td className="px-3 py-2">
+                                    <div className="flex flex-col gap-1 whitespace-nowrap">
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold inline-block w-fit ${listing.status === 'published' ? 'bg-green-100 text-green-700' :
                                             listing.status === 'archived' ? 'bg-orange-100 text-orange-700' :
                                                 'bg-gray-100 text-gray-700'
                                             }`}>
@@ -85,52 +96,80 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
                                                     t('status_draft')}
                                         </span>
                                         {listing.status === 'published' && listing.createdAt && (
-                                            <span className="text-xs text-gray-500">
+                                            <span className="text-[10px] text-gray-500">
                                                 {Math.max(0, 90 - Math.ceil((new Date().getTime() - new Date(listing.createdAt).getTime()) / (1000 * 60 * 60 * 24)))} {t('daysLeft')}
                                             </span>
                                         )}
                                         {listing.status === 'archived' && (
-                                            <span className="text-xs text-red-500 font-medium">Expired</span>
+                                            <span className="text-[10px] text-red-500 font-medium">Expired</span>
                                         )}
                                     </div>
                                 </td>
-                                <td className="p-4 font-bold text-blue-600 dark:text-blue-400">
-                                    <div className="flex items-center gap-1">
-                                        <Eye className="w-4 h-4" />
+                                <td className="px-3 py-2 font-bold text-blue-600 dark:text-blue-400">
+                                    <div className="flex items-center gap-1 text-xs">
+                                        <Eye className="w-3 h-3" />
                                         {listing.viewCount}
                                     </div>
                                 </td>
-                                <td className="p-4 text-right space-x-2 flex justify-end items-center">
-                                    {listing.status === 'archived' && (
-                                        <form action={async (formData) => {
-                                            'use server';
-                                            const { republishListingAction } = await import('@/actions/userActions');
-                                            await republishListingAction(formData);
-                                        }}>
+                                <td className="px-3 py-2 text-right">
+                                    <div className="flex justify-end items-center gap-2">
+                                        {listing.status === 'draft' && user?.role === 'admin' && (
+                                            <form action={async (formData) => {
+                                                'use server';
+                                                const { publishListingAction } = await import('@/actions/userActions');
+                                                await publishListingAction(formData);
+                                            }}>
+                                                <input type="hidden" name="id" value={listing.id} />
+                                                <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+                                                    {t('publish') || "Publish"}
+                                                </Button>
+                                            </form>
+                                        )}
+
+                                        {listing.status === 'published' && (
+                                            <form action={async (formData) => {
+                                                'use server';
+                                                const { unpublishListingAction } = await import('@/actions/userActions');
+                                                await unpublishListingAction(formData);
+                                            }}>
+                                                <input type="hidden" name="id" value={listing.id} />
+                                                <Button size="sm" variant="outline" className="text-orange-600 border-orange-200 hover:bg-orange-50">
+                                                    {t('unpublish') || "Unpublish"}
+                                                </Button>
+                                            </form>
+                                        )}
+
+                                        {listing.status === 'archived' && user?.role === 'admin' && (
+                                            <form action={async (formData) => {
+                                                'use server';
+                                                const { republishListingAction } = await import('@/actions/userActions');
+                                                await republishListingAction(formData);
+                                            }}>
+                                                <input type="hidden" name="id" value={listing.id} />
+                                                <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50">
+                                                    {t('republish')}
+                                                </Button>
+                                            </form>
+                                        )}
+
+                                        <Link href={`/agents/edit-listing/${listing.id}`}>
+                                            <Button size="icon" variant="ghost" className="h-8 w-8 text-blue-600 hover:text-blue-800 hover:bg-blue-50">
+                                                <Edit className="w-4 h-4" />
+                                            </Button>
+                                        </Link>
+                                        <form action={deleteListingAction}>
                                             <input type="hidden" name="id" value={listing.id} />
-                                            <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50 mr-2">
-                                                {t('republish')}
+                                            <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600 hover:text-red-800 hover:bg-red-50">
+                                                <Trash2 className="w-4 h-4" />
                                             </Button>
                                         </form>
-                                    )}
-
-                                    <Link href={`/agents/edit-listing/${listing.id}`}>
-                                        <Button size="icon" variant="ghost" className="h-8 w-8 text-blue-600 hover:text-blue-800 hover:bg-blue-50">
-                                            <Edit className="w-4 h-4" />
-                                        </Button>
-                                    </Link>
-                                    <form action={deleteListingAction}>
-                                        <input type="hidden" name="id" value={listing.id} />
-                                        <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600 hover:text-red-800 hover:bg-red-50">
-                                            <Trash2 className="w-4 h-4" />
-                                        </Button>
-                                    </form>
+                                    </div>
                                 </td>
                             </tr>
                         ))}
                         {listings.length === 0 && (
                             <tr>
-                                <td colSpan={6} className="p-8 text-center text-gray-500">
+                                <td colSpan={9} className="p-8 text-center text-gray-500">
                                     {t('noListings')}
                                     <Link href="/agents/new-listing" className="text-blue-600 hover:underline ml-1">
                                         {t('createOne')}

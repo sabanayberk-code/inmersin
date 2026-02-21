@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
+import { optimizeImage } from "@/skills/ImageOptimizationSkill";
 
 export async function POST(request: NextRequest) {
     try {
@@ -13,9 +14,31 @@ export async function POST(request: NextRequest) {
         }
 
         const buffer = Buffer.from(await file.arrayBuffer());
-        const filename = file.name.replaceAll(" ", "_");
+
+        // Optimize Image
+        let outputBuffer = buffer;
+        let extension = path.extname(file.name);
+
+        // Only optimize if it's an image
+        if (file.type.startsWith("image/")) {
+            try {
+                const optimized = await optimizeImage({
+                    buffer: buffer,
+                    targetFormat: "webp",
+                    quality: 80,
+                    width: 1920
+                });
+                outputBuffer = optimized.buffer;
+                extension = ".webp";
+            } catch (e) {
+                console.error("Image optimization failed, saving original:", e);
+            }
+        }
+
+        // Sanitize filename: ASCII alphanumeric, - and _ only
+        const sanitizedOriginalName = file.name.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9-_]/g, "_");
         const uuid = randomUUID();
-        const uniqueFilename = `${uuid}-${filename}`;
+        const uniqueFilename = `${uuid}-${sanitizedOriginalName}${extension}`;
 
         // Create directory structure: public/uploads/YYYY/MM
         const date = new Date();
@@ -23,6 +46,9 @@ export async function POST(request: NextRequest) {
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const relativePath = `/uploads/${year}/${month}`;
         const uploadDir = path.join(process.cwd(), "public", relativePath);
+
+        console.log(`[Upload] Processing file: ${file.name} -> ${uniqueFilename}`);
+        console.log(`[Upload] Optimization: ${file.size}b -> ${outputBuffer.length}b`);
 
         // Ensure directory exists
         try {
@@ -33,10 +59,12 @@ export async function POST(request: NextRequest) {
 
         // Save file
         const finalPath = path.join(uploadDir, uniqueFilename);
-        await writeFile(finalPath, buffer);
+        console.log(`[Upload] Saving to: ${finalPath}`);
+        await writeFile(finalPath, outputBuffer);
 
         // Return public URL
         const publicUrl = `${relativePath}/${uniqueFilename}`;
+        console.log(`[Upload] Public URL: ${publicUrl}`);
 
         return NextResponse.json({
             success: true,

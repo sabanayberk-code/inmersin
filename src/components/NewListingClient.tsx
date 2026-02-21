@@ -12,19 +12,22 @@ export default function NewListingClient() {
         subCategory?: string;
         mainCategory?: string;
         type: string;
-        propertyType: string
+        propertyType: string;
+        brand?: string;
     } | null>(null);
 
     const handleCategoryComplete = (data: {
         category: string; // This is Main Category ("Vasıta") from CategorySelector logic updates
         subCategory: string; // "Otomobil"
         type: string;
-        propertyType: string
+        propertyType: string;
+        brand?: string;
     }) => {
         setSelection({
             ...data,
             mainCategory: data.category, // Map 'category' (Main) to 'mainCategory' for ListingForm
-            category: data.category // Keep as is, ListingForm handles standard 'category' as SubCategory usually, but we pass explicit fields now
+            category: data.subCategory || data.category, // Pass specific category like 'Konut' instead of 'Emlak'
+            brand: data.brand
         });
     };
 

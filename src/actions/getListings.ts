@@ -33,7 +33,7 @@ export async function getListings(locale: string = 'en', filters?: ListingFilter
     const targetLocale = locale as "en" | "tr" | "ru" | "zh" | "ar";
 
     // Build Where Conditions
-    const whereConditions = [eq(listings.status, 'draft')]; // Should be 'published' in prod, keeping 'draft' for dev
+    const whereConditions = [eq(listings.status, 'published')];
 
     if (filters?.type) {
         whereConditions.push(eq(listings.type, filters.type));
@@ -95,14 +95,23 @@ export async function getListings(locale: string = 'en', filters?: ListingFilter
             if (!isSale && !isRent && queryType !== itemType) return false;
         }
 
+        // Analyze actual Category (handle legacy DB records without 'category' or wrong parent category)
+        let actualCategory = features.category;
+        if (actualCategory === 'Emlak') actualCategory = 'Konut'; // Patch for forms that saved parent category
+        if (!actualCategory && item.type === 'real_estate' && ('bedrooms' in features)) actualCategory = 'Konut';
+
         // Category Filter (Konut, Arsa, etc.)
-        if (filters?.category && features.category && features.category !== filters.category) {
-            return false;
+        if (filters?.category) {
+            if (actualCategory !== filters.category) {
+                return false;
+            }
         }
 
-        // Property Type Filter (Daire, Villa)
-        if (filters?.propertyType && features.propertyType !== filters.propertyType) {
-            return false;
+        // Subcategory / Property Type Filter (Daire, Villa, vs)
+        if (filters?.propertyType) {
+            if (features.propertyType !== filters.propertyType) {
+                return false;
+            }
         }
 
         // Real Estate Specific
@@ -149,6 +158,7 @@ export async function getListings(locale: string = 'en', filters?: ListingFilter
 
         return {
             id: p.id,
+            serialCode: p.serialCode,
             type: p.type,
             price: p.price,
             currency: p.currency || "USD",
@@ -166,26 +176,28 @@ export async function getListings(locale: string = 'en', filters?: ListingFilter
 }
 
 export interface CategoryCounts {
-    konut: { total: number; sale: number; rent: number; types: Record<string, number> };
-    workplace: { total: number; sale: number; rent: number; types: Record<string, number> };
-    land: { total: number; sale: number; rent: number; types: Record<string, number> };
+    konut: { total: number; sale: number; rent: number; types: Record<string, { total: number; sale: number; rent: number }> };
+    workplace: { total: number; sale: number; rent: number; types: Record<string, { total: number; sale: number; rent: number }> };
+    land: { total: number; sale: number; rent: number; types: Record<string, { total: number; sale: number; rent: number }> };
     vasita: {
         total: number;
         sale: number;
         rent: number;
-        automobile: { total: number; brands: Record<string, { total: number; sale: number; rent: number }> };
-        suv: { total: number; brands: Record<string, { total: number; sale: number; rent: number }> };
-        motorcycle: { total: number; brands: Record<string, { total: number; sale: number; rent: number }> };
-        electric: number;
-        minivan: number;
-        commercial: number;
-        damaged: number;
+        automobile: { total: number; sale: number; rent: number; brands: Record<string, { total: number; sale: number; rent: number }> };
+        suv: { total: number; sale: number; rent: number; brands: Record<string, { total: number; sale: number; rent: number }> };
+        motorcycle: { total: number; sale: number; rent: number; brands: Record<string, { total: number; sale: number; rent: number }> };
+        electric: { total: number; sale: number; rent: number };
+        minivan: { total: number; sale: number; rent: number };
+        commercial: { total: number; sale: number; rent: number };
+        damaged: { total: number; sale: number; rent: number };
     };
-    part: { total: number; sale: number };
+    part: { total: number; sale: number; subcategories: Record<string, number> };
 }
 
 export async function getListingCounts(): Promise<CategoryCounts> {
-    const all = await db.select({ type: listings.type, features: listings.features }).from(listings);
+    const all = await db.select({ type: listings.type, features: listings.features })
+        .from(listings)
+        .where(eq(listings.status, 'published'));
 
     const counts: CategoryCounts = {
         konut: { total: 0, sale: 0, rent: 0, types: {} },
@@ -195,39 +207,65 @@ export async function getListingCounts(): Promise<CategoryCounts> {
             total: 0,
             sale: 0,
             rent: 0,
-            automobile: { total: 0, brands: {} },
-            suv: { total: 0, brands: {} },
-            motorcycle: { total: 0, brands: {} },
-            electric: 0,
-            minivan: 0,
-            commercial: 0,
-            damaged: 0
+            automobile: { total: 0, sale: 0, rent: 0, brands: {} },
+            suv: { total: 0, sale: 0, rent: 0, brands: {} },
+            motorcycle: { total: 0, sale: 0, rent: 0, brands: {} },
+            electric: { total: 0, sale: 0, rent: 0 },
+            minivan: { total: 0, sale: 0, rent: 0 },
+            commercial: { total: 0, sale: 0, rent: 0 },
+            damaged: { total: 0, sale: 0, rent: 0 }
         },
-        part: { total: 0, sale: 0 }
+        part: { total: 0, sale: 0, subcategories: {} }
     };
 
     all.forEach(item => {
         const feat = item.features as any;
+
+        // Helper to init propertyType/brand object if missing
+        const initTypeCount = (obj: any, type: string) => {
+            if (!obj[type]) obj[type] = { total: 0, sale: 0, rent: 0 };
+        };
+
         // Check Real Estate vs Vehicle vs Part
         if (item.type === 'real_estate') {
-            const cat = feat.category; // 'Konut', 'İş Yeri', 'Arsa'
-            const pType = feat.propertyType;
+            let cat = feat.category;
+            if (cat === 'Emlak') cat = 'Konut'; // Patch backwards compatibility
+            if (!cat && ('bedrooms' in feat)) cat = 'Konut';
 
-            if (cat === 'Konut' || !cat && feat.bedrooms) { // Default or Konut
+            const pType = feat.propertyType;
+            const isSale = feat.type === 'Sale' || feat.listingType === 'Sale';
+            const isRent = feat.type === 'Rent' || feat.listingType === 'Rent';
+
+            if (cat === 'Konut') { // Default or Konut
                 counts.konut.total++;
-                if (feat.type === 'Sale') counts.konut.sale++;
-                if (feat.type === 'Rent') counts.konut.rent++;
-                if (pType) counts.konut.types[pType] = (counts.konut.types[pType] || 0) + 1;
+                if (isSale) counts.konut.sale++;
+                if (isRent) counts.konut.rent++;
+                if (pType) {
+                    initTypeCount(counts.konut.types, pType);
+                    counts.konut.types[pType].total++;
+                    if (isSale) counts.konut.types[pType].sale++;
+                    if (isRent) counts.konut.types[pType].rent++;
+                }
             } else if (cat === 'İş Yeri') {
                 counts.workplace.total++;
-                if (feat.type === 'Sale') counts.workplace.sale++;
-                if (feat.type === 'Rent') counts.workplace.rent++;
-                if (pType) counts.workplace.types[pType] = (counts.workplace.types[pType] || 0) + 1;
+                if (isSale) counts.workplace.sale++;
+                if (isRent) counts.workplace.rent++;
+                if (pType) {
+                    initTypeCount(counts.workplace.types, pType);
+                    counts.workplace.types[pType].total++;
+                    if (isSale) counts.workplace.types[pType].sale++;
+                    if (isRent) counts.workplace.types[pType].rent++;
+                }
             } else if (cat === 'Arsa') {
                 counts.land.total++;
-                if (feat.type === 'Sale') counts.land.sale++;
-                if (feat.type === 'Rent') counts.land.rent++;
-                if (pType) counts.land.types[pType] = (counts.land.types[pType] || 0) + 1;
+                if (isSale) counts.land.sale++;
+                if (isRent) counts.land.rent++;
+                if (pType) {
+                    initTypeCount(counts.land.types, pType);
+                    counts.land.types[pType].total++;
+                    if (isSale) counts.land.types[pType].sale++;
+                    if (isRent) counts.land.types[pType].rent++;
+                }
             }
         } else if (item.type === 'vehicle') {
             counts.vasita.total++;
@@ -248,6 +286,8 @@ export async function getListingCounts(): Promise<CategoryCounts> {
 
             if (cat === 'Otomobil') {
                 counts.vasita.automobile.total++;
+                if (isSale) counts.vasita.automobile.sale++;
+                if (isRent) counts.vasita.automobile.rent++;
                 if (pType) {
                     initBrand(counts.vasita.automobile.brands, pType);
                     counts.vasita.automobile.brands[pType].total++;
@@ -257,6 +297,8 @@ export async function getListingCounts(): Promise<CategoryCounts> {
             }
             else if (cat === 'Arazi, SUV & Pickup') {
                 counts.vasita.suv.total++;
+                if (isSale) counts.vasita.suv.sale++;
+                if (isRent) counts.vasita.suv.rent++;
                 if (pType) {
                     initBrand(counts.vasita.suv.brands, pType);
                     counts.vasita.suv.brands[pType].total++;
@@ -266,6 +308,8 @@ export async function getListingCounts(): Promise<CategoryCounts> {
             }
             else if (cat === 'Motosiklet') {
                 counts.vasita.motorcycle.total++;
+                if (isSale) counts.vasita.motorcycle.sale++;
+                if (isRent) counts.vasita.motorcycle.rent++;
                 if (pType) {
                     initBrand(counts.vasita.motorcycle.brands, pType);
                     counts.vasita.motorcycle.brands[pType].total++;
@@ -273,17 +317,41 @@ export async function getListingCounts(): Promise<CategoryCounts> {
                     if (isRent) counts.vasita.motorcycle.brands[pType].rent++;
                 }
             }
-            else if (cat === 'Elektrikli Araçlar') counts.vasita.electric++;
-            else if (cat === 'Minivan & Panelvan') counts.vasita.minivan++;
-            else if (cat === 'Ticari Araçlar') counts.vasita.commercial++;
-            else if (cat === 'Hasarlı Araçlar') counts.vasita.damaged++;
+            else if (cat === 'Elektrikli Araçlar') {
+                counts.vasita.electric.total++;
+                if (isSale) counts.vasita.electric.sale++;
+                if (isRent) counts.vasita.electric.rent++;
+            }
+            else if (cat === 'Minivan & Panelvan') {
+                counts.vasita.minivan.total++;
+                if (isSale) counts.vasita.minivan.sale++;
+                if (isRent) counts.vasita.minivan.rent++;
+            }
+            else if (cat === 'Ticari Araçlar') {
+                counts.vasita.commercial.total++;
+                if (isSale) counts.vasita.commercial.sale++;
+                if (isRent) counts.vasita.commercial.rent++;
+            }
+            else if (cat === 'Hasarlı Araçlar') {
+                counts.vasita.damaged.total++;
+                if (isSale) counts.vasita.damaged.sale++;
+                if (isRent) counts.vasita.damaged.rent++;
+            }
 
         } else if (item.type === 'part') {
             counts.part.total++;
             if (feat.listingType === 'Sale') counts.part.sale++;
+
+            // Sub-category counting for parts
+            // feat.category stores the subcategory for parts (e.g. 'Otomotiv Ekipmanları')
+            const cat = feat.category;
+            if (cat) {
+                counts.part.subcategories[cat] = (counts.part.subcategories[cat] || 0) + 1;
+            }
         }
     });
 
+    console.log("Calculated Counts:", JSON.stringify(counts, null, 2));
     return counts;
 }
 

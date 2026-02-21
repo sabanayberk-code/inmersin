@@ -23,6 +23,7 @@ export async function getListing(id: number, locale: string = 'en') {
 
     return {
         id: listing.id,
+        serialCode: listing.serialCode,
         agentId: listing.agentId,
         type: listing.type,
         price: listing.price,

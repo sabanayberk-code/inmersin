@@ -1,8 +1,7 @@
 import { db } from "../lib/db";
-import { listings, listingTranslations, media } from "../db/schema";
+import { listings, listingTranslations, media, LANGUAGES } from "../db/schema";
 import { listingInputSchema, ListingInput } from "../lib/validations/listing";
 import { translateText } from "../skills/TranslationSkill";
-import { optimizeImage } from "../skills/ImageOptimizationSkill";
 import sanitizeHtml from "sanitize-html";
 import { sql, eq, and, lt } from "drizzle-orm";
 
@@ -16,13 +15,13 @@ export class ListingAgent {
         const cleanTitle = sanitizeHtml(validated.title, { allowedTags: [] });
         const cleanDescription = sanitizeHtml(validated.description);
 
-        // 3. Process Images (Parallel)
-        const optimizedImages = await Promise.all(
-            validated.images.map(url => optimizeImage({ imageUrl: url }))
-        );
+        // 3. Process Images (Already optimized by upload route)
+        // Just use the URLs directly
+        const optimizedImages = validated.images;
 
         // 4. Generate Translations (Parallel)
-        const languages = ["ru", "ar", "zh", "tr"] as const;
+        // Ensure EN is obtained via translation if input is not EN
+        const languages = ["ru", "ar", "zh", "tr", "en"] as const;
         const translations = await Promise.all(
             languages.map(async (lang) => {
                 const titleTx = await translateText({ text: cleanTitle, targetLanguage: lang });
@@ -36,7 +35,7 @@ export class ListingAgent {
         );
 
         // 5. Database Transaction
-        return db.transaction(async (tx) => {
+        return db.transaction((tx) => {
             // Insert Listing
             const info = tx.insert(listings).values({
                 agentId: validated.agentId,
@@ -47,21 +46,40 @@ export class ListingAgent {
                 features: validated.features,
                 isShowcase: validated.isShowcase,
                 status: "draft",
-            }).run() as any;
+            }).returning({ id: listings.id }).get();
 
-            const newId = Number(info.lastInsertRowid);
+            const newId = Number(info?.id);
+            if (!newId || isNaN(newId)) {
+                throw new Error("Failed to retrieve new listing ID");
+            }
 
             // Insert Translations (Input Language + Generated)
+
+            // 1. Insert/Update English (Base)
+            // If input is not EN, we need to translate to EN for the base record
+            let enTitle = cleanTitle;
+            let enDesc = cleanDescription;
+
+            // Find EN translation from the generated batch if input wasn't EN
+            // (Assuming input might be TR, and we want EN as base)
+            const enTranslation = translations.find(t => t.lang === 'en');
+            if (enTranslation) {
+                enTitle = enTranslation.title;
+                enDesc = enTranslation.description;
+            }
+
             tx.insert(listingTranslations).values({
                 listingId: newId,
                 language: "en",
-                title: cleanTitle,
-                description: cleanDescription,
-                slug: this.generateSlug(cleanTitle)
+                title: enTitle,
+                description: enDesc,
+                slug: this.generateSlug(enTitle)
             }).run();
 
-            // Generated
+            // 2. Insert other generated translations
             for (const t of translations) {
+                if (t.lang === 'en') continue; // Already inserted above
+
                 tx.insert(listingTranslations).values({
                     listingId: newId,
                     language: t.lang,
@@ -71,17 +89,30 @@ export class ListingAgent {
                 }).run();
             }
 
+            // 3. Generate Serial Code
+            let prefix = "L";
+            if (validated.type === "real_estate") prefix = "E";
+            if (validated.type === "vehicle") prefix = "V";
+            if (validated.type === "part") prefix = "YP";
+
+            const serialCode = `${prefix}-${10000 + newId}`;
+
+            tx.update(listings)
+                .set({ serialCode })
+                .where(eq(listings.id, newId))
+                .run();
+
             // Insert Media
             for (const [index, img] of optimizedImages.entries()) {
                 tx.insert(media).values({
                     listingId: newId,
-                    url: img.optimizedUrl,
+                    url: img, // Use the URL string directly
                     type: "image",
                     order: index
                 }).run();
             }
 
-            return newId;
+            return { id: newId, serialCode };
         });
     }
 
@@ -115,6 +146,24 @@ export class ListingAgent {
         }));
     }
 
+    async getAllListings() {
+        // Admin view - get everything
+        const results = await db.query.listings.findMany({
+            with: {
+                media: true,
+                translations: true
+            },
+            orderBy: (listings, { desc }) => [desc(listings.createdAt)]
+        });
+
+        return results.map(r => ({
+            ...r,
+            title: r.translations.find(t => t.language === 'en')?.title || "Untitled",
+            image: r.media.find(m => m.order === 0)?.url || null,
+            location: r.location as any,
+        }));
+    }
+
     async checkExpirations(agentId: number) {
         const ninetyDaysAgo = new Date();
         ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
@@ -142,20 +191,19 @@ export class ListingAgent {
             .run();
     }
 
-    async updateListing(id: number, input: ListingInput) {
+    async updateListing(id: number, input: ListingInput, locale: string = 'en') {
         const validated = listingInputSchema.parse(input);
 
         // 1. Sanitize Text
         const cleanTitle = sanitizeHtml(validated.title, { allowedTags: [] });
         const cleanDescription = sanitizeHtml(validated.description);
 
-        // 2. Optimize Images
-        const optimizedImages = await Promise.all(
-            validated.images.map(url => optimizeImage({ imageUrl: url }))
-        );
+        // 2. Images (Already optimized by upload route)
+        // Just use the URLs directly
+        const optimizedImages = validated.images;
 
         // 3. Database Transaction
-        return db.transaction(async (tx) => {
+        return db.transaction((tx) => {
             // Update Main Listing
             tx.update(listings)
                 .set({
@@ -169,24 +217,32 @@ export class ListingAgent {
                 .where(sql`${listings.id} = ${id}`)
                 .run();
 
-            // Update Translations:
-            // For simplicity, we'll update the 'en' (or base) translation.
-            // A more robust app would track which language is being edited or update all if content changes significantly.
-            // Here we assume the input is the "main" content.
-            // We'll update the existing 'en' record or insert if missing (though it shouldn't be).
-            const existingEn = await tx.select().from(listingTranslations)
-                .where(and(eq(listingTranslations.listingId, id), eq(listingTranslations.language, 'en')))
+            // Update Translations (Locale Aware)
+            // Ensure locale is valid, fallback to 'en'
+            const validLocale = LANGUAGES.includes(locale as any) ? (locale as typeof LANGUAGES[number]) : 'en';
+            const targetLocale = validLocale;
+
+            const existingTrans = tx.select().from(listingTranslations)
+                .where(and(eq(listingTranslations.listingId, id), eq(listingTranslations.language, targetLocale)))
                 .get();
 
-            if (existingEn) {
+            if (existingTrans) {
                 tx.update(listingTranslations)
                     .set({
                         title: cleanTitle,
                         description: cleanDescription,
                         slug: this.generateSlug(cleanTitle)
                     })
-                    .where(eq(listingTranslations.id, existingEn.id))
+                    .where(eq(listingTranslations.id, existingTrans.id))
                     .run();
+            } else {
+                tx.insert(listingTranslations).values({
+                    listingId: id,
+                    language: targetLocale,
+                    title: cleanTitle,
+                    description: cleanDescription,
+                    slug: this.generateSlug(cleanTitle)
+                }).run();
             }
 
             // Update Images:
@@ -195,10 +251,11 @@ export class ListingAgent {
                 .where(and(eq(media.listingId, id), eq(media.type, 'image')))
                 .run();
 
+            // Insert Media
             for (const [index, img] of optimizedImages.entries()) {
                 tx.insert(media).values({
                     listingId: id,
-                    url: img.optimizedUrl,
+                    url: img, // Use the URL string directly
                     type: "image",
                     order: index
                 }).run();

@@ -2,7 +2,7 @@
 
 import { Link, usePathname } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
-import { LayoutDashboard, User, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, User, ShieldCheck, Tags } from 'lucide-react';
 import { clsx } from 'clsx';
 
 interface SidebarProps {
@@ -58,11 +58,18 @@ export default function Sidebar({ user }: SidebarProps) {
                 {user?.role === 'admin' && (
                     <div className="pt-4 mt-4 border-t border-gray-100 dark:border-gray-700">
                         <Link
-                            href="/admin/users"
+                            href="/dashboard/users"
                             className="flex items-center gap-3 px-4 py-3 rounded-md transition-colors hover:bg-red-50 text-red-700 dark:text-red-400 dark:hover:bg-red-900/20"
                         >
                             <ShieldCheck size={20} />
-                            <span>Admin Panel</span>
+                            <span>Kullanıcılar</span>
+                        </Link>
+                        <Link
+                            href="/dashboard/brands"
+                            className="flex items-center gap-3 px-4 py-3 mt-2 rounded-md transition-colors hover:bg-purple-50 text-purple-700 dark:text-purple-400 dark:hover:bg-purple-900/20"
+                        >
+                            <Tags size={20} />
+                            <span>Marka Talepleri</span>
                         </Link>
                     </div>
                 )}

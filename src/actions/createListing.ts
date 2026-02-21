@@ -22,27 +22,34 @@ export async function submitListingJson(data: any) {
 
         const agent = new ListingAgent();
 
+        console.log("[submitListingJson] Received data:", JSON.stringify(data, null, 2));
+
         const rawData = {
             ...data,
             agentId: user.id,
+            // Explicitly ensure critical fields are passed
+            title: data.title,
+            description: data.description,
+            images: data.images,
+            type: data.type,
             // Ensure array defaults if missing
             features: { ...data.features },
             location: { ...data.location }
         };
 
-        let newId;
+        let result;
         if (data.id) {
-            await agent.updateListing(data.id, rawData);
-            newId = data.id;
+            await agent.updateListing(data.id, rawData, data.locale);
+            result = { id: data.id };
         } else {
-            newId = await agent.createListing(rawData);
+            result = await agent.createListing(rawData as any);
         }
 
         revalidatePath('/properties');
         revalidatePath('/dashboard');
         revalidatePath('/');
 
-        return { success: true, listingId: newId };
+        return { success: true, listingId: result.id, serialCode: (result as any).serialCode };
     } catch (e) {
         console.error("Submit Error:", e);
         return { success: false, error: (e instanceof Error) ? e.message : "Failed to create listing" };
