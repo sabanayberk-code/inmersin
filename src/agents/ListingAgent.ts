@@ -34,85 +34,80 @@ export class ListingAgent {
             })
         );
 
-        // 5. Database Transaction
-        return await db.transaction(async (tx) => {
-            // Insert Listing
-            const info = await tx.insert(listings).values({
-                agentId: validated.agentId,
-                type: validated.type,
-                price: validated.price,
-                currency: validated.currency,
-                location: validated.location,
-                features: validated.features,
-                isShowcase: validated.isShowcase,
-                status: "draft",
-            }).returning({ id: listings.id }).get();
+        // 5. Database Operations (No Transaction due to better-sqlite3 async limit)
+        // Insert Listing
+        const info = await db.insert(listings).values({
+            agentId: validated.agentId,
+            type: validated.type,
+            price: validated.price,
+            currency: validated.currency,
+            location: validated.location,
+            features: validated.features,
+            isShowcase: validated.isShowcase,
+            status: "draft",
+        }).returning({ id: listings.id }).get();
 
-            const newId = Number(info?.id);
-            if (!newId || isNaN(newId)) {
-                throw new Error("Failed to retrieve new listing ID");
-            }
+        const newId = Number(info?.id);
+        if (!newId || isNaN(newId)) {
+            throw new Error("Failed to retrieve new listing ID");
+        }
 
-            // Insert Translations (Input Language + Generated)
+        // Insert Translations (Input Language + Generated)
 
-            // 1. Insert/Update English (Base)
-            // If input is not EN, we need to translate to EN for the base record
-            let enTitle = cleanTitle;
-            let enDesc = cleanDescription;
+        // 1. Insert/Update English (Base)
+        let enTitle = cleanTitle;
+        let enDesc = cleanDescription;
 
-            // Find EN translation from the generated batch if input wasn't EN
-            // (Assuming input might be TR, and we want EN as base)
-            const enTranslation = translations.find(t => t.lang === 'en');
-            if (enTranslation) {
-                enTitle = enTranslation.title;
-                enDesc = enTranslation.description;
-            }
+        const enTranslation = translations.find(t => t.lang === 'en');
+        if (enTranslation) {
+            enTitle = enTranslation.title;
+            enDesc = enTranslation.description;
+        }
 
-            await tx.insert(listingTranslations).values({
-                listingId: newId,
-                language: "en",
-                title: enTitle,
-                description: enDesc,
-                slug: this.generateSlug(enTitle)
-            });
-
-            // 2. Insert other generated translations
-            for (const t of translations) {
-                if (t.lang === 'en') continue; // Already inserted above
-
-                await tx.insert(listingTranslations).values({
-                    listingId: newId,
-                    language: t.lang,
-                    title: t.title,
-                    description: t.description,
-                    slug: this.generateSlug(t.title)
-                });
-            }
-
-            // 3. Generate Serial Code
-            let prefix = "L";
-            if (validated.type === "real_estate") prefix = "E";
-            if (validated.type === "vehicle") prefix = "V";
-            if (validated.type === "part") prefix = "YP";
-
-            const serialCode = `${prefix}-${10000 + newId}`;
-
-            await tx.update(listings)
-                .set({ serialCode })
-                .where(eq(listings.id, newId));
-
-            // Insert Media
-            for (const [index, img] of optimizedImages.entries()) {
-                await tx.insert(media).values({
-                    listingId: newId,
-                    url: img, // Use the URL string directly
-                    type: "image",
-                    order: index
-                });
-            }
-
-            return { id: newId, serialCode };
+        await db.insert(listingTranslations).values({
+            listingId: newId,
+            language: "en",
+            title: enTitle,
+            description: enDesc,
+            slug: this.generateSlug(enTitle)
         });
+
+        // 2. Insert other generated translations
+        for (const t of translations) {
+            if (t.lang === 'en') continue; // Already inserted above
+
+            await db.insert(listingTranslations).values({
+                listingId: newId,
+                language: t.lang,
+                title: t.title,
+                description: t.description,
+                slug: this.generateSlug(t.title)
+            });
+        }
+
+        // 3. Generate Serial Code
+        let prefix = "L";
+        if (validated.type === "real_estate") prefix = "E";
+        if (validated.type === "vehicle") prefix = "V";
+        if (validated.type === "part") prefix = "YP";
+
+        const serialCode = `${prefix}-${10000 + newId}`;
+
+        await db.update(listings)
+            .set({ serialCode })
+            .where(eq(listings.id, newId));
+
+        // Insert Media
+        for (const [index, img] of optimizedImages.entries()) {
+            await db.insert(media).values({
+                listingId: newId,
+                url: img,
+                type: "image",
+                order: index
+            });
+        }
+
+        return { id: newId, serialCode };
     }
 
     async incrementView(id: number) {
@@ -197,66 +192,63 @@ export class ListingAgent {
         const cleanTitle = sanitizeHtml(validated.title, { allowedTags: [] });
         const cleanDescription = sanitizeHtml(validated.description);
 
-        // 2. Images (Already optimized by upload route)
-        // Just use the URLs directly
+        // 2. Images
         const optimizedImages = validated.images;
 
-        // 3. Database Transaction
-        return await db.transaction(async (tx) => {
-            // Update Main Listing
-            await tx.update(listings)
+        // 3. Update without transaction (sqlite runs fast enough to ignore transaction here, or we use a manual approach)
+        // Update Main Listing
+        await db.update(listings)
+            .set({
+                price: validated.price,
+                currency: validated.currency,
+                location: validated.location,
+                features: validated.features,
+                isShowcase: validated.isShowcase,
+                updatedAt: new Date()
+            })
+            .where(sql`${listings.id} = ${id}`);
+
+        // Update Translations (Locale Aware)
+        const validLocale = LANGUAGES.includes(locale as any) ? (locale as typeof LANGUAGES[number]) : 'en';
+        const targetLocale = validLocale;
+
+        const existingTrans = await db.select().from(listingTranslations)
+            .where(and(eq(listingTranslations.listingId, id), eq(listingTranslations.language, targetLocale)))
+            .get();
+
+        if (existingTrans) {
+            await db.update(listingTranslations)
                 .set({
-                    price: validated.price,
-                    currency: validated.currency,
-                    location: validated.location,
-                    features: validated.features,
-                    isShowcase: validated.isShowcase,
-                    updatedAt: new Date()
-                })
-                .where(sql`${listings.id} = ${id}`);
-
-            // Update Translations (Locale Aware)
-            // Ensure locale is valid, fallback to 'en'
-            const validLocale = LANGUAGES.includes(locale as any) ? (locale as typeof LANGUAGES[number]) : 'en';
-            const targetLocale = validLocale;
-
-            const existingTrans = await tx.select().from(listingTranslations)
-                .where(and(eq(listingTranslations.listingId, id), eq(listingTranslations.language, targetLocale)))
-                .get();
-
-            if (existingTrans) {
-                await tx.update(listingTranslations)
-                    .set({
-                        title: cleanTitle,
-                        description: cleanDescription,
-                        slug: this.generateSlug(cleanTitle)
-                    })
-                    .where(eq(listingTranslations.id, existingTrans.id));
-            } else {
-                await tx.insert(listingTranslations).values({
-                    listingId: id,
-                    language: targetLocale,
                     title: cleanTitle,
                     description: cleanDescription,
                     slug: this.generateSlug(cleanTitle)
-                });
-            }
+                })
+                .where(eq(listingTranslations.id, existingTrans.id));
+        } else {
+            await db.insert(listingTranslations).values({
+                listingId: id,
+                language: targetLocale,
+                title: cleanTitle,
+                description: cleanDescription,
+                slug: this.generateSlug(cleanTitle)
+            });
+        }
 
-            // Update Images:
-            // Strategy: Delete all existing images and re-insert.
-            await tx.delete(media)
-                .where(and(eq(media.listingId, id), eq(media.type, 'image')));
+        // Update Images: Strategy: Delete all existing images and re-insert.
+        await db.delete(media)
+            .where(and(eq(media.listingId, id), eq(media.type, 'image')));
 
-            // Insert Media
-            for (const [index, img] of optimizedImages.entries()) {
-                await tx.insert(media).values({
-                    listingId: id,
-                    url: img, // Use the URL string directly
-                    type: "image",
-                    order: index
-                });
-            }
-        });
+        // Insert Media
+        for (const [index, img] of optimizedImages.entries()) {
+            await db.insert(media).values({
+                listingId: id,
+                url: img,
+                type: "image",
+                order: index
+            });
+        }
+
+        return { success: true };
     }
 
     async deleteListing(id: number) {

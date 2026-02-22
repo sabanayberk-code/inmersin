@@ -5,6 +5,37 @@ import PropertyGallery from '@/components/PropertyGallery';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, ShieldCheck, Phone, MessageSquare } from 'lucide-react';
 import { ListingAgent } from '@/agents/ListingAgent';
+import { Metadata } from 'next';
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string, id: string }> }): Promise<Metadata> {
+    const { locale, id } = await params;
+    const propertyId = parseInt(id);
+    if (isNaN(propertyId)) return {};
+
+    const property = await getListing(propertyId, locale);
+    if (!property) return {};
+
+    const title = `${property.title} | Inmersin`;
+    const description = property.description.slice(0, 160) + (property.description.length > 160 ? '...' : '');
+    const imageUrl = property.images && property.images.length > 0 ? property.images[0] : undefined;
+
+    return {
+        title,
+        description,
+        openGraph: {
+            title,
+            description,
+            type: 'website',
+            images: imageUrl ? [{ url: imageUrl }] : [],
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title,
+            description,
+            images: imageUrl ? [imageUrl] : [],
+        }
+    };
+}
 
 export default async function PropertyDetailsPage({ params }: { params: Promise<{ locale: string, id: string }> }) {
     const { locale, id } = await params;
@@ -136,10 +167,14 @@ export default async function PropertyDetailsPage({ params }: { params: Promise<
         <div className="container mx-auto px-4 md:px-24 lg:px-44 py-8 min-h-screen bg-white dark:bg-gray-900">
 
             {/* Breadcrumb / Title Header */}
-            <div className="mb-6">
-                <h2 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-gray-100 uppercase mb-2">
+            <div className="mb-6 flex flex-col md:flex-row md:justify-between md:items-end gap-2">
+                <h2 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-gray-100 uppercase">
                     {property.title}
                 </h2>
+                <div className="flex items-center gap-1.5 text-gray-500 text-sm font-medium bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full w-max">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /><circle cx="12" cy="12" r="3" /></svg>
+                    <span>{property.viewCount || 0} Görüntüleme</span>
+                </div>
             </div>
 
             {/* Grid Container - 3 Columns (5 - 4 - 3) - Gallery medium */}

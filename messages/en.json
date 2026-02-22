@@ -356,7 +356,10 @@
     "sec_color": "Color",
     "sec_caseType": "Case Type",
     "sec_warranty": "Warranty",
-    "sec_condition": "Condition"
+    "sec_condition": "Condition",
+    "sec_year": "Year",
+    "sec_km": "Mileage (KM)",
+    "sec_brand": "Brand"
   },
   "Dashboard": {
     "myListings": "My Listings",

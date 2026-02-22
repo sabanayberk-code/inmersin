@@ -359,7 +359,10 @@
         "sec_color": "Renk",
         "sec_caseType": "Kasa Tipi",
         "sec_warranty": "Garanti",
-        "sec_condition": "Durum"
+        "sec_condition": "Durum",
+        "sec_year": "Yıl",
+        "sec_km": "Kilometre",
+        "sec_brand": "Marka"
     },
     "Dashboard": {
         "myListings": "İlanlarım",
