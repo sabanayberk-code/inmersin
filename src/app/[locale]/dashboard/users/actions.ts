@@ -18,7 +18,7 @@ export async function approveUser(userId: number) {
     await checkAdmin();
 
     await db.update(users)
-        .set({ isApproved: true })
+        .set({ isApproved: true, emailVerified: true })
         .where(eq(users.id, userId));
 
     revalidatePath('/[locale]/admin/users');
