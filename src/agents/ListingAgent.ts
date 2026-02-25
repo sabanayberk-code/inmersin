@@ -196,13 +196,22 @@ export class ListingAgent {
         const optimizedImages = validated.images;
 
         // 3. Update without transaction (sqlite runs fast enough to ignore transaction here, or we use a manual approach)
+        const existingListing = await db.query.listings.findFirst({
+            where: eq(listings.id, id)
+        });
+
+        if (!existingListing) throw new Error("Listing not found");
+
+        const mergedFeatures = { ...(existingListing.features as object || {}), ...validated.features };
+        const mergedLocation = { ...(existingListing.location as object || {}), ...validated.location };
+
         // Update Main Listing
         await db.update(listings)
             .set({
                 price: validated.price,
                 currency: validated.currency,
-                location: validated.location,
-                features: validated.features,
+                location: mergedLocation,
+                features: mergedFeatures,
                 isShowcase: validated.isShowcase,
                 updatedAt: new Date()
             })
