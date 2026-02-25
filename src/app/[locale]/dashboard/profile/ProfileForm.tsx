@@ -3,9 +3,11 @@
 import { useActionState } from 'react';
 import { updateProfile } from './actions';
 import { Button } from '@/components/ui/button';
+import { useTranslations } from 'next-intl';
 
 export function ProfileForm({ user }: { user: { name: string; email: string; phone: string | null; companyName: string | null } }) {
     const [state, action, isPending] = useActionState(updateProfile, null); // Use undefined or null as initial state
+    const t = useTranslations('Profile');
 
     return (
         <form action={action} className="space-y-4">
@@ -22,17 +24,17 @@ export function ProfileForm({ user }: { user: { name: string; email: string; pho
             )}
 
             <div>
-                <label className="block text-sm font-medium mb-1">Email</label>
+                <label className="block text-sm font-medium mb-1">{t('emailLabel')}</label>
                 <input
                     type="email"
                     disabled
                     value={user.email}
                     className="w-full p-2 border rounded bg-gray-100 dark:bg-gray-700 cursor-not-allowed text-gray-500"
                 />
-                <p className="text-xs text-gray-500 mt-1">Email cannot be changed.</p>
+                <p className="text-xs text-gray-500 mt-1">{t('emailCannotBeChanged')}</p>
             </div>
             <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Full Name</label>
+                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">{t('fullName')}</label>
                 <input
                     name="name"
                     defaultValue={user.name}
@@ -42,7 +44,7 @@ export function ProfileForm({ user }: { user: { name: string; email: string; pho
                 {state?.errors?.name && <p className="text-red-500 text-xs mt-1">{state.errors.name[0]}</p>}
             </div>
             <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Phone</label>
+                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">{t('phoneLabel')}</label>
                 <input
                     name="phone"
                     defaultValue={user.phone || ''}
@@ -52,17 +54,17 @@ export function ProfileForm({ user }: { user: { name: string; email: string; pho
                 {state?.errors?.phone && <p className="text-red-500 text-xs mt-1">{state.errors.phone[0]}</p>}
             </div>
             <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Company Name</label>
+                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">{t('companyName')}</label>
                 <input
                     name="companyName"
                     defaultValue={user.companyName || ''}
-                    placeholder="E.g. İnmersin Ajans"
+                    placeholder={t('companyNamePlaceholder')}
                     className="w-full p-2 border rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600"
                 />
                 {state?.errors?.companyName && <p className="text-red-500 text-xs mt-1">{state.errors.companyName[0]}</p>}
             </div>
             <Button type="submit" disabled={isPending}>
-                {isPending ? 'Updating...' : 'Update Profile'}
+                {isPending ? t('updating') : t('updateProfile')}
             </Button>
         </form>
     );

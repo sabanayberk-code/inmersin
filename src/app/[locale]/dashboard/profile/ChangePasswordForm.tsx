@@ -3,9 +3,11 @@
 import { useActionState } from 'react';
 import { changePassword } from './actions';
 import { Button } from '@/components/ui/button';
+import { useTranslations } from 'next-intl';
 
 export function ChangePasswordForm() {
     const [state, action, isPending] = useActionState(changePassword, null);
+    const t = useTranslations('Profile');
 
     return (
         <form action={action} className="space-y-4">
@@ -22,7 +24,7 @@ export function ChangePasswordForm() {
             )}
 
             <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Current Password</label>
+                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">{t('currentPassword')}</label>
                 <input
                     type="password"
                     name="currentPassword"
@@ -32,7 +34,7 @@ export function ChangePasswordForm() {
                 {state?.errors?.currentPassword && <p className="text-red-500 text-xs mt-1">{state.errors.currentPassword[0]}</p>}
             </div>
             <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">New Password</label>
+                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">{t('newPassword')}</label>
                 <input
                     type="password"
                     name="newPassword"
@@ -43,7 +45,7 @@ export function ChangePasswordForm() {
                 {state?.errors?.newPassword && <p className="text-red-500 text-xs mt-1">{state.errors.newPassword[0]}</p>}
             </div>
             <Button type="submit" variant="outline" disabled={isPending}>
-                {isPending ? 'Changing...' : 'Change Password'}
+                {isPending ? t('changing') : t('changeAction')}
             </Button>
         </form>
     );

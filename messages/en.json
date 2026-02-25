@@ -53,8 +53,26 @@
     "errorInvalidToken": "Invalid token",
     "successResetSent": "If an account exists, a reset link has been sent.",
     "errorInvalidExpiredToken": "Invalid or expired token",
-    "successRegistration": "Registration successful! Please check your email to verify your account.",
+    "successRegistration": "Registration successful! You can log in after admin approval.",
     "logout": "Log Out"
+  },
+  "Profile": {
+    "myProfile": "My Profile",
+    "personalInformation": "Personal Information",
+    "changePassword": "Change Password",
+    "emailLabel": "Email",
+    "emailCannotBeChanged": "Email cannot be changed.",
+    "fullName": "Full Name",
+    "phoneLabel": "Phone",
+    "companyName": "Company Name",
+    "companyNamePlaceholder": "E.g. Inmersin Agency",
+    "updating": "Updating...",
+    "updateProfile": "Update Profile",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "newPasswordAgain": "New Password (Again)",
+    "changing": "Changing...",
+    "changeAction": "Change Password"
   },
   "Form": {
     "edit_title": "Edit Listing #{id}",

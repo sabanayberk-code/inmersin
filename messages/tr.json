@@ -53,8 +53,26 @@
         "errorInvalidToken": "Geçersiz jeton",
         "successResetSent": "Eğer bir hesap varsa, sıfırlama bağlantısı gönderildi.",
         "errorInvalidExpiredToken": "Geçersiz veya süresi dolmuş jeton",
-        "successRegistration": "Kayıt başarılı! Hesabınızı doğrulamak için lütfen e-postanızı kontrol edin.",
+        "successRegistration": "Kayıt başarılı! Yönetici onayından sonra giriş yapabilirsiniz.",
         "logout": "Çıkış Yap"
+    },
+    "Profile": {
+        "myProfile": "Profilim",
+        "personalInformation": "Kişisel Bilgiler",
+        "changePassword": "Şifre Değiştir",
+        "emailLabel": "E-posta",
+        "emailCannotBeChanged": "E-posta adresi değiştirilemez.",
+        "fullName": "Ad Soyad",
+        "phoneLabel": "Telefon",
+        "companyName": "Şirket Adı",
+        "companyNamePlaceholder": "Ör. İnmersin Ajans",
+        "updating": "Güncelleniyor...",
+        "updateProfile": "Profili Güncelle",
+        "currentPassword": "Mevcut Şifre",
+        "newPassword": "Yeni Şifre",
+        "newPasswordAgain": "Yeni Şifre (Tekrar)",
+        "changing": "Değiştiriliyor...",
+        "changeAction": "Şifreyi Değiştir"
     },
     "Form": {
         "edit_title": "İlan Düzenle #{id}",
