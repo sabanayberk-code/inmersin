@@ -321,6 +321,12 @@ export default function ListingForm({ initialData, isEditMode = false }: Listing
     };
 
     const onSubmit = (data: any) => {
+        if (currentStep !== totalSteps) {
+            // Prevent Enter key from submitting the form early; instead move to next step
+            nextStep();
+            return;
+        }
+
         setError(null);
         startTransition(async () => {
             // data.images is already populated and validated by the sync effect and Zod

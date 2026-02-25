@@ -21,6 +21,14 @@ const nextConfig = {
         ],
         dangerouslyAllowSVG: true,
     },
+    async rewrites() {
+        return [
+            {
+                source: '/uploads/:path*',
+                destination: '/api/uploads/:path*'
+            }
+        ];
+    },
 };
 
 export default withNextIntl(nextConfig);
