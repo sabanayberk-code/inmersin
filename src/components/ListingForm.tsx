@@ -597,7 +597,10 @@ export default function ListingForm({ initialData, isEditMode = false }: Listing
                             {currentStep < totalSteps ? (
                                 <Button
                                     type="button"
-                                    onClick={nextStep}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        nextStep();
+                                    }}
                                     className="px-6 py-4 md:px-8 md:py-6 text-sm md:text-base font-semibold bg-blue-600 hover:bg-blue-700 w-[140px] md:w-auto"
                                 >
                                     Sonraki Adım
