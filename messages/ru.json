@@ -187,8 +187,13 @@
         "val_bank": "Банк",
         "val_construction": "Застройщик",
         "val_parking_open": "Открытая",
-        "val_parking_closed": "Закрытая",
-        "val_parking_none": "Нет"
+        "val_parking_none": "Нет",
+        "konut": "Жилая недвижимость",
+        "iş yeri": "Коммерческая недвижимость",
+        "arsa": "Земельный участок",
+        "emlak": "Недвижимость",
+        "vasıta": "Транспорт",
+        "yedek parça": "Запчасти"
     },
     "Filters": {
         "title_listings": "Очистить фильтры",

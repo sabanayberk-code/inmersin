@@ -77,24 +77,24 @@ export default function ListingCard({
                         <div className="flex items-center text-gray-500 text-[11px] sm:text-sm mb-2 sm:mb-4">
                             <MapPin className="w-3 h-3 sm:w-4 sm:h-4 mr-0.5 sm:mr-1 shrink-0" />
                             <span className="line-clamp-1">
-                                {location.neighborhood ? `${location.neighborhood}, ` : ''}
-                                {location.district}/{location.city}
+                                {location?.neighborhood ? `${location.neighborhood}, ` : ''}
+                                {location?.district}/{location?.city}
                             </span>
                         </div>
                     </div>
 
                     <div className="hidden sm:flex flex-wrap gap-1 mb-2">
-                        {features.hasPool && (
+                        {features?.hasPool && (
                             <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 gap-1 pl-1">
                                 <Waves className="w-3 h-3" /> {t('pool')}
                             </Badge>
                         )}
-                        {features.hasGarden && (
+                        {features?.hasGarden && (
                             <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 hover:bg-green-200 gap-1 pl-1">
                                 <Trees className="w-3 h-3" /> {t('garden')}
                             </Badge>
                         )}
-                        {features.hasGarage && (
+                        {features?.hasGarage && (
                             <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 gap-1 pl-1">
                                 <Car className="w-3 h-3" /> {t('garage')}
                             </Badge>
@@ -107,38 +107,38 @@ export default function ListingCard({
                                 <>
                                     <div className="flex items-center gap-1" title={t('rooms')}>
                                         <Bed className="hidden sm:block w-3.5 h-3.5" />
-                                        <span>{features.bedrooms || '-'}</span>
+                                        <span>{features?.bedrooms || '-'}</span>
                                     </div>
                                     <span className="sm:hidden font-bold opacity-50">•</span>
                                     <div className="flex items-center gap-1" title={t('bathrooms')}>
                                         <Bath className="hidden sm:block w-3.5 h-3.5 text-gray-400" />
-                                        <span>{features.bathrooms || '-'}</span>
+                                        <span>{features?.bathrooms || '-'}</span>
                                     </div>
-                                    {features.wc > 0 && (
+                                    {features?.wc > 0 && (
                                         <>
                                             <span className="hidden sm:inline font-bold opacity-50">•</span>
                                             <div className="hidden sm:flex items-center gap-1" title="WC">
                                                 <Armchair className="w-3.5 h-3.5 text-gray-400" />
-                                                <span>{features.wc}</span>
+                                                <span>{features?.wc}</span>
                                             </div>
                                         </>
                                     )}
                                     <span className="sm:hidden font-bold opacity-50">•</span>
                                     <div className="flex items-center gap-1" title={t('grossArea')}>
                                         <Move className="hidden sm:block w-3.5 h-3.5 text-gray-400" />
-                                        <span>{features.area || '-'}m²</span>
+                                        <span>{features?.area || '-'}m²</span>
                                     </div>
                                 </>
                             ) : props.type === 'vehicle' ? (
                                 <>
-                                    <span className="font-semibold sm:font-medium text-gray-700 dark:text-gray-300">{features.year || '-'}</span>
+                                    <span className="font-semibold sm:font-medium text-gray-700 dark:text-gray-300">{features?.year || '-'}</span>
                                     <span className="opacity-50">•</span>
-                                    <span>{features.km ? features.km.toLocaleString() + ' km' : '-'}</span>
+                                    <span>{features?.km ? features?.km?.toLocaleString() + ' km' : '-'}</span>
                                     <span className="hidden sm:inline opacity-50">•</span>
-                                    <span className="truncate hidden sm:inline">{features.gear || '-'}</span>
+                                    <span className="truncate hidden sm:inline">{features?.gear || '-'}</span>
                                 </>
                             ) : (
-                                <span>{features.category || '-'}</span>
+                                <span>{features?.category || '-'}</span>
                             )}
                         </div>
 
