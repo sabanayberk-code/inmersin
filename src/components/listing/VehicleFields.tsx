@@ -41,12 +41,12 @@ export default function VehicleFields({ isEditMode }: { isEditMode?: boolean }) 
                     </div>
                     <div className="space-y-2">
                         <Label>{t('lbl_year')} <span className="text-red-500">*</span></Label>
-                        <Input type="number" {...register("features.year", { valueAsNumber: true })} placeholder={t('ph_year')} />
+                        <Input type="number" {...register("features.year", { valueAsNumber: true })} min={0} placeholder={t('ph_year')} />
                         {(errors as any).features?.year && <p className="text-red-500 text-xs mt-1">{tError((errors as any).features.year.message)}</p>}
                     </div>
                     <div className="space-y-2">
                         <Label>{t('lbl_km')} <span className="text-red-500">*</span></Label>
-                        <Input type="number" {...register("features.km", { valueAsNumber: true })} placeholder={t('ph_km')} />
+                        <Input type="number" {...register("features.km", { valueAsNumber: true })} min={0} placeholder={t('ph_km')} />
                         {(errors as any).features?.km && <p className="text-red-500 text-xs mt-1">{tError((errors as any).features.km.message)}</p>}
                     </div>
 
@@ -101,11 +101,11 @@ export default function VehicleFields({ isEditMode }: { isEditMode?: boolean }) 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                     <div className="space-y-2">
                         <Label>{t('lbl_enginePower')}</Label>
-                        <Input type="number" {...register("features.enginePower", { valueAsNumber: true })} />
+                        <Input type="number" {...register("features.enginePower", { valueAsNumber: true })} min={0} />
                     </div>
                     <div className="space-y-2">
                         <Label>{t('lbl_engineDisplacement')}</Label>
-                        <Input type="number" {...register("features.engineDisplacement", { valueAsNumber: true })} />
+                        <Input type="number" {...register("features.engineDisplacement", { valueAsNumber: true })} min={0} />
                     </div>
                     <div className="space-y-2">
                         <Label>{t('lbl_traction')}</Label>

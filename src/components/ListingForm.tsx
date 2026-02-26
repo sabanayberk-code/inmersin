@@ -281,19 +281,27 @@ export default function ListingForm({ initialData, isEditMode = false }: Listing
 
     // Validation per step
     const nextStep = async () => {
-        let fieldsToValidate: string[] = [];
+        // Trigger entire form validation to ensure deeply nested fields are caught
+        await formMethods.trigger();
+        const stateErrors = formMethods.formState.errors;
+
+        let hasErrorInCurrentStep = false;
 
         if (currentStep === 1) {
-            fieldsToValidate = ['title', 'description', 'price', 'currency'];
+            if (stateErrors.title || stateErrors.description || stateErrors.price || stateErrors.currency) {
+                hasErrorInCurrentStep = true;
+            }
         } else if (currentStep === 2) {
-            fieldsToValidate = ['location.city', 'location.district', 'location.neighborhood', 'location.address'];
+            if (stateErrors.location) {
+                hasErrorInCurrentStep = true;
+            }
         } else if (currentStep === 3) {
-            // Features step
-            fieldsToValidate = ['features', 'type'];
+            if (stateErrors.features || stateErrors.type) {
+                hasErrorInCurrentStep = true;
+            }
         }
 
-        const isStepValid = await formMethods.trigger(fieldsToValidate as any);
-        if (isStepValid) {
+        if (!hasErrorInCurrentStep) {
             setCurrentStep(prev => Math.min(prev + 1, totalSteps));
             window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top of form on step change
         }
@@ -305,8 +313,11 @@ export default function ListingForm({ initialData, isEditMode = false }: Listing
     };
 
     const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const rawValue = e.target.value.replace(/,/g, '');
-        if (!isNaN(Number(rawValue))) {
+        let rawValue = e.target.value.replace(/,/g, '');
+        if (rawValue.includes('-')) {
+            rawValue = rawValue.replace(/-/g, '');
+        }
+        if (!isNaN(Number(rawValue)) && rawValue !== "") {
             setValue("price", Number(rawValue));
             setDisplayPrice(new Intl.NumberFormat('en-US').format(Number(rawValue)));
         } else if (rawValue === "") {

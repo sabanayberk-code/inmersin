@@ -65,12 +65,12 @@ export default function RealEstateFields({ isEditMode }: { isEditMode?: boolean 
                     </div>
                     <div className="space-y-2">
                         <Label>{t('floorLocation')} <span className="text-red-500">*</span></Label>
-                        <Input type="number" {...register("features.floorNumber", { valueAsNumber: true })} />
+                        <Input type="number" {...register("features.floorNumber", { valueAsNumber: true })} min={0} />
                         {(errors as any).features?.floorNumber && <p className="text-red-500 text-xs mt-1">{tError((errors as any).features.floorNumber.message)}</p>}
                     </div>
                     <div className="space-y-2">
                         <Label>{t('totalFloors')} <span className="text-red-500">*</span></Label>
-                        <Input type="number" {...register("features.totalFloors", { valueAsNumber: true })} />
+                        <Input type="number" {...register("features.totalFloors", { valueAsNumber: true })} min={0} />
                         {(errors as any).features?.totalFloors && <p className="text-red-500 text-xs mt-1">{tError((errors as any).features.totalFloors.message)}</p>}
                     </div>
                     <div className="space-y-2">
@@ -170,12 +170,12 @@ export default function RealEstateFields({ isEditMode }: { isEditMode?: boolean 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t pt-6">
                 <div className="space-y-2">
                     <Label>{t('dues')}</Label>
-                    <Input type="number" {...register("features.dues", { valueAsNumber: true })} />
+                    <Input type="number" {...register("features.dues", { valueAsNumber: true })} min={0} />
                     {(errors as any).features?.dues && <p className="text-red-500 text-xs mt-1">{t((errors as any).features.dues.message)}</p>}
                 </div>
                 <div className="space-y-2">
                     <Label>{t('deposit')}</Label>
-                    <Input type="number" {...register("features.deposit", { valueAsNumber: true })} />
+                    <Input type="number" {...register("features.deposit", { valueAsNumber: true })} min={0} />
                     {(errors as any).features?.deposit && <p className="text-red-500 text-xs mt-1">{t((errors as any).features.deposit.message)}</p>}
                 </div>
             </div>
