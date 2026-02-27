@@ -6,6 +6,7 @@ import { listingInputSchema, ListingInput } from "@/lib/validations/listing";
 import { submitListingJson } from "@/actions/createListing";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CATEGORY_DATA } from '@/data/categories';
 import { CITIES } from '@/data/locations';
 import { Textarea } from "@/components/ui/textarea";
@@ -451,51 +452,71 @@ export default function ListingForm({ initialData, isEditMode = false }: Listing
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                                 <div className="space-y-1">
                                     <Label className="font-semibold text-sm">{t('province')} <span className="text-red-500">*</span></Label>
-                                    <select
-                                        className="flex h-9 md:h-10 w-full rounded-md border border-input bg-background px-2 md:px-3 py-1.5 text-xs md:text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
-                                        {...register("location.city")}
-                                        onChange={(e) => {
-                                            register("location.city").onChange(e);
-                                            setValue("location.district", "");
+                                    <Select
+                                        value={watchedCity || ""}
+                                        onValueChange={(val) => {
+                                            setValue("location.city", val, { shouldValidate: true });
+                                            setValue("location.district", ""); // Reset district
                                         }}
                                     >
-                                        <option value="">İl Seç</option>
-                                        <option value="Mersin" className="font-bold">Mersin</option>
-                                        <option disabled>──────────</option>
-                                        {Object.keys(CITIES).filter(c => c !== 'Mersin').sort().map(c => (
-                                            <option key={c} value={c}>{c}</option>
-                                        ))}
-                                    </select>
+                                        <SelectTrigger className="h-9 md:h-10 text-xs md:text-sm w-full bg-white dark:bg-gray-900">
+                                            <SelectValue placeholder="İl Seç" />
+                                        </SelectTrigger>
+                                        <SelectContent className="max-h-[300px]">
+                                            <SelectItem value="Mersin" className="font-bold py-1.5 px-2 text-sm bg-blue-50 dark:bg-blue-900/10">Mersin</SelectItem>
+                                            <div className="h-px bg-gray-100 dark:bg-gray-800 my-1 mx-2" />
+                                            {Object.keys(CITIES).filter(c => c !== 'Mersin').sort().map(c => (
+                                                <SelectItem key={c} value={c} className="py-1.5 px-2 text-sm">{c}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <input type="hidden" {...register("location.city")} />
                                     {(errors.location as any)?.city && <p className="text-red-500 text-[11px] md:text-xs font-medium m-0">İl zorunlu.</p>}
                                 </div>
 
                                 <div className="space-y-1">
                                     <Label className="font-semibold text-sm">{t('district')} <span className="text-red-500">*</span></Label>
-                                    <select
-                                        className="flex h-9 md:h-10 w-full rounded-md border border-input bg-background px-2 md:px-3 py-1.5 text-xs md:text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
-                                        {...register("location.district")}
+                                    <Select
+                                        value={watchedDistrict || ""}
+                                        onValueChange={(val) => {
+                                            setValue("location.district", val, { shouldValidate: true });
+                                        }}
                                         disabled={!watchedCity}
                                     >
-                                        <option value="">İlçe Seç</option>
-                                        {watchedCity && CITIES[watchedCity] && CITIES[watchedCity].map(d => (
-                                            <option key={d} value={d}>{d}</option>
-                                        ))}
-                                    </select>
+                                        <SelectTrigger className="h-9 md:h-10 text-xs md:text-sm w-full bg-white dark:bg-gray-900">
+                                            <SelectValue placeholder="İlçe Seç" />
+                                        </SelectTrigger>
+                                        <SelectContent className="max-h-[300px]">
+                                            {watchedCity && CITIES[watchedCity] && CITIES[watchedCity].map(d => (
+                                                <SelectItem key={d} value={d} className="py-1.5 px-2 text-sm">{d}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <input type="hidden" {...register("location.district")} />
                                     {(errors.location as any)?.district && <p className="text-red-500 text-[11px] md:text-xs font-medium m-0">İlçe zorunlu.</p>}
                                 </div>
 
                                 <div className="space-y-1">
                                     <Label className="font-semibold text-sm">{t('neighborhood')}</Label>
                                     {neighborhoodList.length > 0 ? (
-                                        <select
-                                            className="flex h-9 md:h-10 w-full rounded-md border border-input bg-background px-2 md:px-3 py-1.5 text-xs md:text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
-                                            {...register("location.neighborhood")}
-                                        >
-                                            <option value="">{isLoadingNbh ? "Yükleniyor..." : "Mahalle Seç"}</option>
-                                            {neighborhoodList.map(n => (
-                                                <option key={n} value={n}>{n}</option>
-                                            ))}
-                                        </select>
+                                        <>
+                                            <Select
+                                                value={watch("location.neighborhood") || ""}
+                                                onValueChange={(val) => {
+                                                    setValue("location.neighborhood", val, { shouldValidate: true });
+                                                }}
+                                            >
+                                                <SelectTrigger className="h-9 md:h-10 text-xs md:text-sm w-full bg-white dark:bg-gray-900">
+                                                    <SelectValue placeholder={isLoadingNbh ? "Yükleniyor..." : "Mahalle Seç"} />
+                                                </SelectTrigger>
+                                                <SelectContent className="max-h-[300px]">
+                                                    {neighborhoodList.map(n => (
+                                                        <SelectItem key={n} value={n} className="py-1.5 px-2 text-sm">{n}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <input type="hidden" {...register("location.neighborhood")} />
+                                        </>
                                     ) : (
                                         <Input {...register("location.neighborhood")} className="h-9 md:h-10 text-xs md:text-sm" placeholder={isLoadingNbh ? "Yükleniyor..." : "Mahalle adı..."} />
                                     )}

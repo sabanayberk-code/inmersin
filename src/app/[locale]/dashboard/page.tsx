@@ -32,7 +32,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
         <div className="container mx-auto px-4 py-8 min-h-screen">
             <h1 className="text-3xl font-bold mb-8 text-gray-800 dark:text-gray-100">{t('myListings')}</h1>
 
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-x-auto">
                 <table className="w-full text-left text-sm">
                     <thead className="bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 uppercase text-xs font-semibold">
                         <tr>
