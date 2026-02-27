@@ -3,7 +3,7 @@
 import { Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import LanguageSwitcher from './LanguageSwitcher';
-import { Phone, MessageCircle } from 'lucide-react';
+import { Phone, MessageCircle, Plus, User, LogIn } from 'lucide-react';
 
 import { logout } from '@/app/[locale]/auth/actions';
 
@@ -42,23 +42,26 @@ export default function Navbar({ user }: NavbarProps) {
             <div className="flex items-center gap-2 md:gap-4 ml-auto md:ml-0">
                 <LanguageSwitcher />
 
-                <Link href="/agents/new-listing" className="hidden sm:inline-flex h-9 items-center justify-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-green-600/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-colors">
-                    {t('postAd')}
+                <Link href="/agents/new-listing" className="inline-flex h-9 items-center justify-center rounded-md bg-green-600 px-3 md:px-4 py-2 text-sm font-medium text-white shadow hover:bg-green-600/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-colors">
+                    <Plus className="w-5 h-5 md:hidden" />
+                    <span className="hidden md:inline">{t('postAd')}</span>
                 </Link>
 
                 {user ? (
                     <div className="flex items-center gap-2 md:gap-4">
-                        <Link href="/dashboard" className="hidden sm:inline-flex h-9 items-center justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-red-700/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-colors">
-                            {t('dashboard') || "Panel"}
+                        <Link href="/dashboard" className="inline-flex h-9 items-center justify-center rounded-md bg-red-600 px-3 md:px-4 py-2 text-sm font-medium text-white shadow hover:bg-red-700/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-colors">
+                            <User className="w-5 h-5 md:hidden" />
+                            <span className="hidden md:inline">{t('dashboard') || "Panel"}</span>
                         </Link>
                         <span className="text-sm font-medium hidden md:block">{user.name}</span>
-                        <button onClick={() => logout()} className="text-sm font-medium text-red-600 hover:text-red-500">
+                        <button onClick={() => logout()} className="hidden md:block text-sm font-medium text-red-600 hover:text-red-500">
                             {tAuth('logout')}
                         </button>
                     </div>
                 ) : (
-                    <Link href="/auth/login" className="hidden sm:inline-flex h-9 items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-blue-600/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-colors">
-                        {tAuth('signInButton')}
+                    <Link href="/auth/login" className="inline-flex h-9 items-center justify-center rounded-md bg-blue-600 px-3 md:px-4 py-2 text-sm font-medium text-white shadow hover:bg-blue-600/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-colors">
+                        <LogIn className="w-5 h-5 md:hidden" />
+                        <span className="hidden md:inline">{tAuth('signInButton')}</span>
                     </Link>
                 )}
             </div>
