@@ -88,7 +88,7 @@ const baseListingInput = z.object({
     currency: z.enum(["USD", "EUR", "TRY"]).default("USD"),
     location: locationSchema,
     title: z.string().min(10, "err_min_10"),
-    description: z.string().min(20, "err_min_20"),
+    description: z.string().min(10, "err_min_10"),
     images: z.array(z.string()).min(1, "err_min_image"),
     isShowcase: z.boolean().default(false),
 });

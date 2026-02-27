@@ -48,8 +48,7 @@ export default function ImageUpload({ value, onChange, placeholder }: ImageUploa
 
                 let fileToUpload = file;
 
-                /* 
-                // Skip compression for now as it might be causing issues
+                // Apply compression
                 if (file.type.startsWith('image/')) {
                     try {
                         const compressedFile = await imageCompression(file, options);
@@ -57,8 +56,7 @@ export default function ImageUpload({ value, onChange, placeholder }: ImageUploa
                     } catch (error) {
                         console.error("Compression failed, using original file", error);
                     }
-                } 
-                */
+                }
 
                 // Upload
                 const formData = new FormData();
@@ -76,7 +74,8 @@ export default function ImageUpload({ value, onChange, placeholder }: ImageUploa
                         newUrls.push(data.url);
                     }
                 } else {
-                    console.error("Upload failed");
+                    console.error("Upload failed", response.statusText);
+                    alert(`Upload failed for ${file.name}. File might be too large.`);
                 }
             }
 

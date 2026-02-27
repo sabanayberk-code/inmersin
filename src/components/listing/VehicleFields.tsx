@@ -23,7 +23,7 @@ export default function VehicleFields({ isEditMode }: { isEditMode?: boolean }) 
             {/* Vehicle Details */}
             <div className="border-t pt-6">
                 <h3 className="font-semibold text-lg text-gray-700 dark:text-gray-300 mb-4">{t('sec_vehicle')}</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                     <div className="space-y-2">
                         <Label>{t('lbl_brand')} <span className="text-red-500">*</span></Label>
                         <Input
