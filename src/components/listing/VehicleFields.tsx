@@ -4,9 +4,10 @@ import { useFormContext } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTranslations } from "next-intl";
+import { ResponsiveSelect } from "@/components/ResponsiveSelect";
 
 export default function VehicleFields({ isEditMode }: { isEditMode?: boolean }) {
-    const { register, formState: { errors } } = useFormContext();
+    const { register, watch, setValue, formState: { errors } } = useFormContext();
     const t = useTranslations('Form');
     const inputClass = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
 
@@ -52,39 +53,54 @@ export default function VehicleFields({ isEditMode }: { isEditMode?: boolean }) 
 
                     <div className="space-y-2">
                         <Label>{t('lbl_gear')} <span className="text-red-500">*</span></Label>
-                        <select {...register("features.gear")} className={inputClass}>
-                            <option value="">{t('unspecified')}</option>
-                            <option value="Automatic">{t('opt_automatic')}</option>
-                            <option value="Manual">{t('opt_manual')}</option>
-                            <option value="Semi-Automatic">{t('opt_semi_automatic')}</option>
-                        </select>
+                        <ResponsiveSelect
+                            value={watch("features.gear") || ""}
+                            onValueChange={(val) => setValue("features.gear", val, { shouldValidate: true })}
+                            options={[
+                                { label: t('opt_automatic'), value: "Automatic" },
+                                { label: t('opt_manual'), value: "Manual" },
+                                { label: t('opt_semi_automatic'), value: "Semi-Automatic" },
+                            ]}
+                            placeholder={t('unspecified')}
+                            label={t('lbl_gear')}
+                        />
                         {(errors as any).features?.gear && <p className="text-red-500 text-xs mt-1">{tError((errors as any).features.gear.message)}</p>}
                     </div>
                     <div className="space-y-2">
                         <Label>{t('lbl_fuel')} <span className="text-red-500">*</span></Label>
-                        <select {...register("features.fuel")} className={inputClass}>
-                            <option value="">{t('unspecified')}</option>
-                            <option value="Gasoline">{t('opt_gasoline')}</option>
-                            <option value="Diesel">{t('opt_diesel')}</option>
-                            <option value="Electric">{t('opt_electric')}</option>
-                            <option value="Hybrid">{t('opt_hybrid')}</option>
-                            <option value="LPG">{t('opt_lpg')}</option>
-                        </select>
+                        <ResponsiveSelect
+                            value={watch("features.fuel") || ""}
+                            onValueChange={(val) => setValue("features.fuel", val, { shouldValidate: true })}
+                            options={[
+                                { label: t('opt_gasoline'), value: "Gasoline" },
+                                { label: t('opt_diesel'), value: "Diesel" },
+                                { label: t('opt_electric'), value: "Electric" },
+                                { label: t('opt_hybrid'), value: "Hybrid" },
+                                { label: t('opt_lpg'), value: "LPG" },
+                            ]}
+                            placeholder={t('unspecified')}
+                            label={t('lbl_fuel')}
+                        />
                         {(errors as any).features?.fuel && <p className="text-red-500 text-xs mt-1">{tError((errors as any).features.fuel.message)}</p>}
                     </div>
                     <div className="space-y-2">
                         <Label>{t('lbl_caseType')} <span className="text-red-500">*</span></Label>
-                        <select {...register("features.caseType")} className={inputClass}>
-                            <option value="">{t('unspecified')}</option>
-                            <option value="Sedan">{t('opt_sedan')}</option>
-                            <option value="Hatchback">{t('opt_hatchback')}</option>
-                            <option value="Station Wagon">{t('opt_station_wagon')}</option>
-                            <option value="SUV">{t('opt_suv')}</option>
-                            <option value="Coupe">{t('opt_coupe')}</option>
-                            <option value="Convertible">{t('opt_convertible')}</option>
-                            <option value="Minivan">{t('opt_minivan')}</option>
-                            <option value="Pickup">{t('opt_pickup')}</option>
-                        </select>
+                        <ResponsiveSelect
+                            value={watch("features.caseType") || ""}
+                            onValueChange={(val) => setValue("features.caseType", val, { shouldValidate: true })}
+                            options={[
+                                { label: t('opt_sedan'), value: "Sedan" },
+                                { label: t('opt_hatchback'), value: "Hatchback" },
+                                { label: t('opt_station_wagon'), value: "Station Wagon" },
+                                { label: t('opt_suv'), value: "SUV" },
+                                { label: t('opt_coupe'), value: "Coupe" },
+                                { label: t('opt_convertible'), value: "Convertible" },
+                                { label: t('opt_minivan'), value: "Minivan" },
+                                { label: t('opt_pickup'), value: "Pickup" },
+                            ]}
+                            placeholder={t('unspecified')}
+                            label={t('lbl_caseType')}
+                        />
                         {(errors as any).features?.caseType && <p className="text-red-500 text-xs mt-1">{tError((errors as any).features.caseType.message)}</p>}
                     </div>
                     <div className="space-y-2">
@@ -109,13 +125,18 @@ export default function VehicleFields({ isEditMode }: { isEditMode?: boolean }) 
                     </div>
                     <div className="space-y-2">
                         <Label>{t('lbl_traction')}</Label>
-                        <select {...register("features.drivetrain")} className={inputClass}>
-                            <option value="">{t('unspecified')}</option>
-                            <option value="FWD">{t('opt_fwd')}</option>
-                            <option value="RWD">{t('opt_rwd')}</option>
-                            <option value="4WD">{t('opt_4wd')}</option>
-                            <option value="AWD">{t('opt_awd')}</option>
-                        </select>
+                        <ResponsiveSelect
+                            value={watch("features.drivetrain") || ""}
+                            onValueChange={(val) => setValue("features.drivetrain", val, { shouldValidate: true })}
+                            options={[
+                                { label: t('opt_fwd'), value: "FWD" },
+                                { label: t('opt_rwd'), value: "RWD" },
+                                { label: t('opt_4wd'), value: "4WD" },
+                                { label: t('opt_awd'), value: "AWD" },
+                            ]}
+                            placeholder={t('unspecified')}
+                            label={t('lbl_traction')}
+                        />
                     </div>
                     <div className="space-y-2 md:col-span-2">
                         <Label>{t('lbl_damage')}</Label>

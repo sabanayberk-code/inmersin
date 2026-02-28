@@ -25,6 +25,7 @@ export default function Navbar({ user }: NavbarProps) {
                 <Link href="/" className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
                     Inmersin
                 </Link>
+                <LanguageSwitcher />
             </div>
 
             <div className="flex items-center justify-center gap-3 md:gap-6 bg-gray-50/50 dark:bg-gray-800/50 px-3 py-1.5 md:px-4 md:py-2 rounded-full border border-gray-100 dark:border-gray-800 w-full order-last md:order-none md:w-max">
@@ -40,7 +41,6 @@ export default function Navbar({ user }: NavbarProps) {
             </div>
 
             <div className="flex items-center gap-2 md:gap-4 ml-auto md:ml-0">
-                <LanguageSwitcher />
 
                 <Link href="/agents/new-listing" className="inline-flex h-9 items-center justify-center rounded-md bg-green-600 px-3 md:px-4 py-2 text-sm font-medium text-white shadow hover:bg-green-600/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-colors">
                     <Plus className="w-5 h-5 md:hidden" />

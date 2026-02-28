@@ -147,8 +147,8 @@ export default function ListingCard({
                             {formattedPrice}
                         </div>
 
-                        {/* Desktop View Count */}
-                        <div className="hidden sm:flex items-center gap-1 text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded-full text-[10px] shrink-0 border border-gray-100 dark:border-gray-800 dark:bg-gray-800" title="Görüntülenme">
+                        {/* View Count */}
+                        <div className="flex items-center gap-1 text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded-full text-[10px] shrink-0 border border-gray-100 dark:border-gray-800 dark:bg-gray-800" title="Görüntülenme">
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /><circle cx="12" cy="12" r="3" /></svg>
                             <span className="font-medium">{props.viewCount || 0}</span>
                         </div>

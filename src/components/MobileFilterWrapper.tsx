@@ -11,13 +11,13 @@ export default function MobileFilterWrapper({ children }: { children: React.Reac
     return (
         <>
             {/* Hamburger Button for Mobile */}
-            <div className="lg:hidden flex justify-end mb-4">
+            <div className="lg:hidden flex justify-end mb-2 mt-[-0.5rem]">
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="p-2 border rounded-md bg-white dark:bg-gray-800 shadow-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                    className="py-1 px-3 border rounded border-gray-200 bg-white dark:bg-gray-800 shadow-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-1.5"
                 >
-                    <Menu className="w-5 h-5" />
-                    <span className="text-sm font-medium">{t('title_listings') || "Filtreler"}</span>
+                    <Menu className="w-4 h-4" />
+                    <span className="text-[13px] font-medium">{t('title_listings') || "Filtreler"}</span>
                 </button>
             </div>
 

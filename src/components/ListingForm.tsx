@@ -20,6 +20,7 @@ import RealEstateFields from "./listing/RealEstateFields";
 import VehicleFields from "./listing/VehicleFields";
 import PartFields from "./listing/PartFields";
 import ImageUpload from "./ImageUpload";
+import { ResponsiveSelect } from "@/components/ResponsiveSelect";
 
 // Base Mock Exchange Rates
 const RATES: Record<string, number> = {
@@ -129,6 +130,12 @@ export default function ListingForm({ initialData, isEditMode = false }: Listing
         const type = initialData.features?.type || initialData.type || "";
         const pType = initialData.features?.propertyType || initialData.propertyType || "";
         return `${type} ${pType}`.trim();
+    };
+
+    const getTitlePlaceholder = () => {
+        if (discriminatorType === 'vehicle') return "Örn: 2023 BMW 320i M Sport";
+        if (discriminatorType === 'part') return "Örn: Orijinal VW Golf 7 Far";
+        return t('ph_title');
     };
 
 
@@ -367,9 +374,9 @@ export default function ListingForm({ initialData, isEditMode = false }: Listing
     return (
         <FormProvider {...formMethods}>
             <Card className="w-full max-w-4xl mx-auto shadow-md border-0 bg-white/50 backdrop-blur-sm dark:bg-gray-900/50">
-                <CardHeader className="bg-white dark:bg-gray-900 border-b rounded-t-xl pb-4">
-                    <CardTitle className="text-xl md:text-2xl text-center font-bold text-gray-800 dark:text-gray-100 flex items-center justify-center gap-2">
-                        {t('header')} <span className="text-blue-600 font-normal shrink-0">({initialData?.category || "Listing"})</span>
+                <CardHeader className="bg-white dark:bg-gray-900 border-b rounded-t-xl py-2 md:py-4">
+                    <CardTitle className="text-base md:text-2xl text-center font-bold text-gray-800 dark:text-gray-100 flex items-center justify-center gap-2">
+                        {t('header')} <span className="text-blue-600 font-normal shrink-0 text-sm md:text-xl">({initialData?.category || "Listing"})</span>
                     </CardTitle>
                 </CardHeader>
 
@@ -403,7 +410,7 @@ export default function ListingForm({ initialData, isEditMode = false }: Listing
                                     <Label className="text-gray-700 dark:text-gray-300 font-semibold text-sm">{t('title')} <span className="text-red-500">*</span></Label>
                                     <Input
                                         {...register("title")}
-                                        placeholder={t('ph_title')}
+                                        placeholder={getTitlePlaceholder()}
                                         className="h-9 md:h-10 text-sm md:text-base"
                                         onBlur={(e) => handleCapitalize("title", e.target.value)}
                                     />
@@ -452,46 +459,37 @@ export default function ListingForm({ initialData, isEditMode = false }: Listing
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                                 <div className="space-y-1">
                                     <Label className="font-semibold text-sm">{t('province')} <span className="text-red-500">*</span></Label>
-                                    <Select
+                                    <ResponsiveSelect
                                         value={watchedCity || ""}
                                         onValueChange={(val) => {
                                             setValue("location.city", val, { shouldValidate: true });
                                             setValue("location.district", ""); // Reset district
                                         }}
-                                    >
-                                        <SelectTrigger className="h-9 md:h-10 text-xs md:text-sm w-full bg-white dark:bg-gray-900">
-                                            <SelectValue placeholder="İl Seç" />
-                                        </SelectTrigger>
-                                        <SelectContent className="max-h-[300px]">
-                                            <SelectItem value="Mersin" className="font-bold py-1.5 px-2 text-sm bg-blue-50 dark:bg-blue-900/10">Mersin</SelectItem>
-                                            <div className="h-px bg-gray-100 dark:bg-gray-800 my-1 mx-2" />
-                                            {Object.keys(CITIES).filter(c => c !== 'Mersin').sort().map(c => (
-                                                <SelectItem key={c} value={c} className="py-1.5 px-2 text-sm">{c}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                        options={[
+                                            { label: 'Mersin', value: 'Mersin', className: 'font-bold bg-blue-50 dark:bg-blue-900/10' },
+                                            ...Object.keys(CITIES).filter(c => c !== 'Mersin').sort().map(c => ({ label: c, value: c }))
+                                        ]}
+                                        placeholder="İl Seç"
+                                        label="İl Seçiniz"
+                                    />
                                     <input type="hidden" {...register("location.city")} />
                                     {(errors.location as any)?.city && <p className="text-red-500 text-[11px] md:text-xs font-medium m-0">İl zorunlu.</p>}
                                 </div>
 
                                 <div className="space-y-1">
                                     <Label className="font-semibold text-sm">{t('district')} <span className="text-red-500">*</span></Label>
-                                    <Select
+                                    <ResponsiveSelect
                                         value={watchedDistrict || ""}
                                         onValueChange={(val) => {
                                             setValue("location.district", val, { shouldValidate: true });
                                         }}
+                                        options={
+                                            (watchedCity && CITIES[watchedCity]) ? CITIES[watchedCity].map(d => ({ label: d, value: d })) : []
+                                        }
+                                        placeholder="İlçe Seç"
+                                        label="İlçe Seçiniz"
                                         disabled={!watchedCity}
-                                    >
-                                        <SelectTrigger className="h-9 md:h-10 text-xs md:text-sm w-full bg-white dark:bg-gray-900">
-                                            <SelectValue placeholder="İlçe Seç" />
-                                        </SelectTrigger>
-                                        <SelectContent className="max-h-[300px]">
-                                            {watchedCity && CITIES[watchedCity] && CITIES[watchedCity].map(d => (
-                                                <SelectItem key={d} value={d} className="py-1.5 px-2 text-sm">{d}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    />
                                     <input type="hidden" {...register("location.district")} />
                                     {(errors.location as any)?.district && <p className="text-red-500 text-[11px] md:text-xs font-medium m-0">İlçe zorunlu.</p>}
                                 </div>
@@ -500,21 +498,15 @@ export default function ListingForm({ initialData, isEditMode = false }: Listing
                                     <Label className="font-semibold text-sm">{t('neighborhood')}</Label>
                                     {neighborhoodList.length > 0 ? (
                                         <>
-                                            <Select
+                                            <ResponsiveSelect
                                                 value={watch("location.neighborhood") || ""}
                                                 onValueChange={(val) => {
                                                     setValue("location.neighborhood", val, { shouldValidate: true });
                                                 }}
-                                            >
-                                                <SelectTrigger className="h-9 md:h-10 text-xs md:text-sm w-full bg-white dark:bg-gray-900">
-                                                    <SelectValue placeholder={isLoadingNbh ? "Yükleniyor..." : "Mahalle Seç"} />
-                                                </SelectTrigger>
-                                                <SelectContent className="max-h-[300px]">
-                                                    {neighborhoodList.map(n => (
-                                                        <SelectItem key={n} value={n} className="py-1.5 px-2 text-sm">{n}</SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                                options={neighborhoodList.map(n => ({ label: n, value: n }))}
+                                                placeholder={isLoadingNbh ? "Yükleniyor..." : "Mahalle Seç"}
+                                                label="Mahalle Seçiniz"
+                                            />
                                             <input type="hidden" {...register("location.neighborhood")} />
                                         </>
                                     ) : (
