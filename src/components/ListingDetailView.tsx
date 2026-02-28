@@ -2,10 +2,18 @@
 
 import { useState } from 'react';
 import PropertyGallery from '@/components/PropertyGallery';
-import { MapPin, ShieldCheck } from 'lucide-react';
+import { MapPin, ShieldCheck, Phone, MessageSquare, User } from 'lucide-react';
+import { Drawer, DrawerContent, DrawerTrigger, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter, DrawerClose } from '@/components/ui/drawer';
 
 export default function ListingDetailView({ property, attributes, formattedPrice, images, texts }: any) {
     const [activeTab, setActiveTab] = useState<'details' | 'desc'>('details');
+    const [isContactDrawerOpen, setIsContactDrawerOpen] = useState(false);
+    const [contactType, setContactType] = useState<'call' | 'message'>('call');
+
+    const openContact = (type: 'call' | 'message') => {
+        setContactType(type);
+        setIsContactDrawerOpen(true);
+    };
     // Using a simple height calculation for the sticky top to avoid overlapping navbar
     // Assuming navbar is ~72px, plus padding
 
@@ -27,17 +35,22 @@ export default function ListingDetailView({ property, attributes, formattedPrice
                 <div className="lg:col-span-5 space-y-0 lg:space-y-6">
                     <PropertyGallery images={images} title={property.title} />
 
+                    {/* Mobile Location Info */}
+                    <div className="lg:hidden text-[13px] text-center text-gray-600 dark:text-gray-400 font-normal mt-2 pb-2 px-4">
+                        {(property.location as any).city}{(property.location as any).district ? ` / ${(property.location as any).district}` : ''}{(property.location as any).neighborhood ? ` / ${(property.location as any).neighborhood}` : ''}
+                    </div>
+
                     {/* Mobile Tabs */}
-                    <div className="lg:hidden sticky top-[125px] z-30 flex bg-white dark:bg-gray-900 border-b shadow-sm -mx-4 px-4 overflow-x-auto">
+                    <div className="lg:hidden sticky top-[112px] z-30 flex bg-white dark:bg-gray-900 border-b shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] -mx-4 px-4 overflow-x-auto">
                         <button
                             onClick={() => setActiveTab('details')}
-                            className={`flex-1 py-3 px-2 text-center text-sm font-bold border-b-4 transition-colors ${activeTab === 'details' ? 'border-[#ffce00] bg-[#ffce00] text-gray-900' : 'border-transparent text-gray-600 bg-white dark:bg-gray-900'}`}
+                            className={`flex-1 py-3 px-2 text-center text-[15px] transition-colors border-b-[3px] ${activeTab === 'details' ? 'border-[#1b55a2] text-[#1b55a2] font-semibold' : 'border-transparent text-gray-500 font-medium bg-white dark:bg-gray-900'}`}
                         >
                             İlan Bilgileri
                         </button>
                         <button
                             onClick={() => setActiveTab('desc')}
-                            className={`flex-1 py-3 px-2 text-center text-sm font-bold border-b-4 transition-colors ${activeTab === 'desc' ? 'border-[#ffce00] bg-[#ffce00] text-gray-900' : 'border-transparent text-gray-600 bg-white dark:bg-gray-900'}`}
+                            className={`flex-1 py-3 px-2 text-center text-[15px] transition-colors border-b-[3px] ${activeTab === 'desc' ? 'border-[#1b55a2] text-[#1b55a2] font-semibold' : 'border-transparent text-gray-500 font-medium bg-white dark:bg-gray-900'}`}
                         >
                             Açıklama
                         </button>
@@ -123,14 +136,65 @@ export default function ListingDetailView({ property, attributes, formattedPrice
             </div>
 
             {/* Mobile Fixed Bottom Bar */}
-            <div className="fixed bottom-0 left-0 right-0 p-3 bg-white dark:bg-gray-900 border-t flex gap-3 lg:hidden z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
-                <button className="flex-1 bg-[#1b55a2] text-white py-2.5 rounded text-center font-bold text-[15px] shadow-sm active:bg-blue-800 transition-colors">
+            <div className="fixed bottom-0 left-0 right-0 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] bg-white dark:bg-gray-900 border-t flex gap-3 lg:hidden z-40 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+                <button
+                    onClick={() => openContact('call')}
+                    className="flex-1 bg-[#1b55a2] text-white py-2.5 rounded text-center font-bold text-[15px] shadow-sm active:bg-blue-800 transition-colors"
+                >
                     Ara
                 </button>
-                <button className="flex-1 bg-[#1b55a2] text-white py-2.5 rounded text-center font-bold text-[15px] shadow-sm active:bg-blue-800 transition-colors">
+                <button
+                    onClick={() => openContact('message')}
+                    className="flex-1 bg-[#1b55a2] text-white py-2.5 rounded text-center font-bold text-[15px] shadow-sm active:bg-blue-800 transition-colors"
+                >
                     Mesaj Gönder
                 </button>
             </div>
+
+            {/* Mobile Contact Drawer */}
+            <Drawer open={isContactDrawerOpen} onOpenChange={setIsContactDrawerOpen}>
+                <DrawerContent className="lg:hidden text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-900">
+                    <div className="w-full max-w-sm mx-auto p-4 pb-8">
+                        {/* Agent/Owner Visual Info */}
+                        <div className="flex bg-white dark:bg-gray-800 rounded-lg p-4 border dark:border-gray-700 shadow-sm mb-4 items-center justify-between relative overflow-hidden">
+                            <div className="flex items-center gap-4">
+                                <div className="w-14 h-14 bg-gray-100 dark:bg-gray-700 text-gray-400 rounded flex items-center justify-center shadow-inner">
+                                    <User className="w-8 h-8" />
+                                </div>
+                                <div className="flex flex-col">
+                                    <h2 className="font-bold text-lg leading-tight dark:text-gray-100">
+                                        {property.agent?.name || 'Mustafa Düzgün'}
+                                    </h2>
+                                    {property.agent?.companyName && (
+                                        <span className="text-xs text-gray-500 font-medium tracking-wide mt-1 uppercase">
+                                            {property.agent.companyName}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                            {property.agent?.companyName && (
+                                <div className="absolute top-0 right-0 bg-[#f9db35] text-black text-[10px] font-bold px-2 py-1 flex items-center justify-center rounded-bl-lg shadow-sm">
+                                    Premium Galeri
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Action Button */}
+                        <div className="flex bg-[#25d366] text-white rounded-lg overflow-hidden items-center shadow-md">
+                            <span className="px-4 text-sm font-semibold opacity-90 border-r border-white/20 h-full flex items-center">
+                                Cep
+                            </span>
+                            <a
+                                href={contactType === 'call' ? `tel:${property.agent?.phone || '05514539090'}` : `https://wa.me/${property.agent?.phone?.replace(/\D/g, '') || '905514539090'}`}
+                                className="flex-1 text-center py-4 font-bold text-lg hover:bg-[#20b858] transition-colors flex justify-center items-center gap-2"
+                            >
+                                {contactType === 'call' ? <Phone className="w-5 h-5 fill-white" /> : <MessageSquare className="w-5 h-5" />}
+                                {property.agent?.phone || '0 (551) 453 90 90'}
+                            </a>
+                        </div>
+                    </div>
+                </DrawerContent>
+            </Drawer>
         </>
     );
 }
