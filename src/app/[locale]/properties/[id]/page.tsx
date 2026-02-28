@@ -1,9 +1,7 @@
 import { getListing } from '@/actions/getListing';
 import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import PropertyGallery from '@/components/PropertyGallery';
-import { Badge } from '@/components/ui/badge';
-import { MapPin, ShieldCheck, Phone, MessageSquare } from 'lucide-react';
+import ListingDetailView from '@/components/ListingDetailView';
 import { ListingAgent } from '@/agents/ListingAgent';
 import { Metadata } from 'next';
 
@@ -164,106 +162,14 @@ export default async function PropertyDetailsPage({ params }: { params: Promise<
         : ["https://placehold.co/800x600?text=No+Image"];
 
     return (
-        <div className="container mx-auto px-4 md:px-24 lg:px-44 py-8 min-h-screen bg-white dark:bg-gray-900">
-
-            {/* Breadcrumb / Title Header */}
-            <div className="mb-6 flex flex-col md:flex-row md:justify-between md:items-end gap-2">
-                <h2 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-gray-100 uppercase">
-                    {property.title}
-                </h2>
-                <div className="flex items-center gap-1.5 text-gray-500 text-sm font-medium bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full w-max">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /><circle cx="12" cy="12" r="3" /></svg>
-                    <span>{property.viewCount || 0} Görüntüleme</span>
-                </div>
-            </div>
-
-            {/* Grid Container - 3 Columns (5 - 4 - 3) - Gallery medium */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-                {/* Left Column: Gallery (5 cols) - Medium size */}
-                <div className="lg:col-span-5 space-y-6">
-                    <PropertyGallery images={images} title={property.title} />
-
-                    {/* Google Map Placeholder - Kept under gallery */}
-                    <div className="bg-gray-100 rounded-lg p-4 h-48 flex items-center justify-center text-gray-400 mt-4">
-                        <MapPin className="w-6 h-6 mr-2" /> Harita Konumu
-                    </div>
-
-                    {/* Description */}
-                    <div className="prose dark:prose-invert max-w-none border-t pt-6">
-                        <h3 className="text-lg font-bold mb-3">{t('description') || 'Açıklama'}</h3>
-                        <p className="whitespace-pre-line text-sm text-gray-700 dark:text-gray-300">
-                            {property.description}
-                        </p>
-                    </div>
-                </div>
-
-                {/* Center Column: Listing Details (4 cols) - Adjusted */}
-                <div className="lg:col-span-4 space-y-2">
-                    {/* Price & Location Header */}
-                    <div className="border-b pb-2 mb-2">
-                        <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">
-                            {formattedPrice}
-                        </h1>
-                        <div className="text-sm font-semibold text-gray-800 dark:text-gray-200 cursor-pointer hover:underline">
-                            {(property.location as any).city} / {(property.location as any).district} / {(property.location as any).neighborhood}
-                        </div>
-                    </div>
-
-                    {/* Attribute Table (Dense) */}
-                    <div className="text-sm">
-                        {attributes.map((attr, idx) => (
-                            <div key={idx} className="flex items-center py-1.5 border-b border-gray-100 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                                <span className="font-bold text-gray-800 dark:text-gray-200 text-xs w-[180px] flex-shrink-0">{attr.label}</span>
-                                <span className={`text-xs ${attr.highlightRed ? 'text-red-600 font-bold' : attr.highlight ? 'text-red-600 font-bold' : 'text-gray-600 dark:text-gray-400 font-normal'}`}>
-                                    {attr.value}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Right Column: Agent (3 cols) */}
-                <div className="lg:col-span-3 space-y-4">
-                    <div className="sticky top-4 space-y-4">
-                        {/* Agent Card */}
-                        <div className="border rounded-lg p-4 bg-white dark:bg-gray-800 shadow-sm">
-                            <div className="text-center mb-3 border-b pb-2">
-                                <h4 className="font-bold text-blue-800 dark:text-blue-400 text-xs">{property.agent?.companyName || 'inmersin ajans'}</h4>
-                            </div>
-
-                            <div className="flex flex-col items-center mb-3">
-                                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-2xl font-bold text-gray-600 mb-2 overflow-hidden">
-                                    <span>{property.agent?.name?.charAt(0) || 'A'}</span>
-                                </div>
-                                <h3 className="font-bold text-base text-gray-900 dark:text-gray-100 text-center">{property.agent?.name || 'Mert Kuruçeşme'}</h3>
-                                <a href="#" className="text-xs text-blue-500 hover:underline mt-1">Tüm ilanları</a>
-                                <a href="#" className="text-xs text-blue-500 hover:underline">Favori Satıcılarıma ekle</a>
-                            </div>
-
-                            <div className="space-y-2 text-sm mb-3">
-                                <div className="flex justify-between bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
-                                    <span className="text-gray-500 text-xs">İş</span>
-                                    <span className="font-bold text-gray-800 dark:text-gray-200 text-xs">{property.agent?.phone || '0 (216) 208 92 15'}</span>
-                                </div>
-                                <div className="flex justify-between bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
-                                    <span className="text-gray-500 text-xs">Cep</span>
-                                    <span className="font-bold text-gray-800 dark:text-gray-200 text-xs">{property.agent?.phone || '0 (545) 581 37 54'}</span>
-                                </div>
-                            </div>
-
-                            <button className="w-full text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center justify-center gap-2 py-2 border rounded hover:bg-blue-50 transition">
-                                <MessageSquare className="w-4 h-4" /> Mesaj gönder
-                            </button>
-                        </div>
-                        {/* Safety Tips */}
-                        <div className="items-start gap-2 pt-2 text-gray-500 dark:text-gray-400 text-[10px] hidden lg:flex">
-                            <ShieldCheck className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                            <p>Kiralayacağınız gayrimenkulü görmeden kapora göndermeyin.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div className="container mx-auto lg:px-44 lg:py-8 min-h-screen bg-white md:bg-gray-50 dark:bg-gray-950">
+            <ListingDetailView
+                property={property}
+                attributes={attributes}
+                formattedPrice={formattedPrice}
+                images={images}
+                texts={{ description: t('description') || 'Açıklama' }}
+            />
         </div>
     );
 }

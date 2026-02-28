@@ -36,69 +36,38 @@ export default function PropertyGallery({ images, title }: PropertyGalleryProps)
     return (
         <div className="space-y-4">
             {/* Main Image Stage */}
-            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border bg-gray-100 dark:bg-gray-800 group">
+            <div
+                className="relative aspect-[4/3] w-full overflow-hidden border bg-gray-100 dark:bg-gray-800 group cursor-pointer"
+                onClick={() => setIsLightboxOpen(true)}
+            >
                 <Image
                     src={mainImage}
                     alt={title}
                     fill
-                    className="object-contain bg-black/5"
+                    className="object-cover bg-black/5"
                     priority
                 />
 
                 {/* Navigation Arrows */}
                 <button
                     onClick={(e) => { e.stopPropagation(); prevImage(); }}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow hover:bg-white opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow hover:bg-white transition-opacity z-10"
                 >
                     <ChevronLeft className="w-6 h-6" />
                 </button>
                 <button
                     onClick={(e) => { e.stopPropagation(); nextImage(); }}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow hover:bg-white opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow hover:bg-white transition-opacity z-10"
                 >
                     <ChevronRight className="w-6 h-6" />
                 </button>
 
                 {/* Tag Overlay */}
-                <div className="absolute bottom-4 left-4 flex gap-2 z-10">
-                    <span className="bg-black/60 text-white px-2 py-1 text-xs rounded">
-                        {selectedIndex + 1}/{images.length} Fotoğraf
+                <div className="absolute bottom-4 mx-auto left-0 right-0 w-max z-10">
+                    <span className="bg-black/60 text-white px-3 py-1 font-semibold text-xs rounded-full">
+                        {selectedIndex + 1} / {images.length}
                     </span>
                 </div>
-            </div>
-
-            {/* Controls */}
-            <div className="flex justify-between items-center text-sm">
-                <button
-                    onClick={() => setIsLightboxOpen(true)}
-                    className="flex items-center gap-2 text-blue-600 font-semibold hover:underline bg-blue-50 px-3 py-2 rounded transition-colors"
-                >
-                    <Expand className="w-4 h-4" /> Büyük Fotoğraf
-                </button>
-                <button className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
-                    <PlayCircle className="w-4 h-4" /> Video
-                </button>
-            </div>
-
-            {/* Thumbnail Strip (Horizontal Scroll) */}
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x">
-                {images.map((img, idx) => (
-                    <button
-                        key={idx}
-                        onClick={() => handleThumbnailClick(img, idx)}
-                        className={cn(
-                            "relative w-20 h-20 flex-shrink-0 overflow-hidden rounded-md border-2 transition-all snap-start",
-                            selectedIndex === idx ? "border-blue-600 ring-2 ring-blue-100" : "border-transparent opacity-70 hover:opacity-100"
-                        )}
-                    >
-                        <Image
-                            src={img}
-                            alt={`${title} - Thumbnail ${idx + 1}`}
-                            fill
-                            className="object-cover"
-                        />
-                    </button>
-                ))}
             </div>
 
             {/* Lightbox Overlay */}
